@@ -76,20 +76,22 @@ $(document).ready(function() {
 
     function setupEventListeners() {
         // Channel selection
-        $(document).on('click', '.channel-item', function() {
+        $(document).on('click', '#user-list li', function() {
             const channelId = $(this).data('channel-id');
-            selectChannel(channelId);
+            const userEmail = $(this).data('user-email');
+            selectChannel(channelId, userEmail);
         });
 
-        // Refresh channels
-        $('#refresh-channels').on('click', function() {
-            refreshChannels();
+        // Mobile back button
+        $('#back-to-users-btn').on('click', function() {
+            showUserList();
         });
 
         // Send message
         $('#send-btn').on('click', sendMessage);
         $('#message-input').on('keypress', function(e) {
-            if (e.which === 13) {
+            if (e.which === 13 && !e.shiftKey) {
+                e.preventDefault();
                 sendMessage();
             }
         });
@@ -106,18 +108,32 @@ $(document).ready(function() {
             const src = $(this).attr('src');
             showImageModal(src);
         });
+
+        // Auto-resize textarea
+        $('#message-input').on('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+
+        // Window resize handler
+        $(window).on('resize', function() {
+            if ($(window).width() >= 768) {
+                // Desktop/tablet view - show both panels
+                $('.admin-container').removeClass('show-chat');
+            }
+        });
     }
 
     function updateConnectionStatus(connected) {
         const statusEl = $('#connection-status');
         if (connected) {
-            statusEl.removeClass('disconnected bg-danger')
-                   .addClass('bg-success')
-                   .html('<i class="fas fa-circle me-1"></i>Đã kết nối');
+            statusEl.removeClass('disconnected')
+                   .addClass('connected')
+                   .text('Đã kết nối');
         } else {
-            statusEl.removeClass('bg-success')
-                   .addClass('disconnected bg-danger')
-                   .html('<i class="fas fa-exclamation-circle me-1"></i>Mất kết nối');
+            statusEl.removeClass('connected')
+                   .addClass('disconnected')
+                   .text('Mất kết nối');
         }
     }
 
@@ -128,12 +144,12 @@ $(document).ready(function() {
     }
 
     function updateChannelsList(channels) {
-        const channelsContainer = $('#channels-list');
+        const userList = $('#user-list');
         
         if (!channels || channels.length === 0) {
-            channelsContainer.html(`
-                <div class="text-center text-muted py-4">
-                    <i class="fas fa-comments fa-2x mb-2"></i>
+            userList.html(`
+                <div class="empty-state">
+                    <i class="fas fa-comments fa-2x"></i>
                     <p>Chưa có cuộc trò chuyện nào</p>
                 </div>
             `);
@@ -147,41 +163,46 @@ $(document).ready(function() {
             const lastMessageTime = channel.lastMessage ? formatDate(channel.lastMessage.timestamp) : '';
             
             html += `
-                <div class="channel-item p-2 border rounded mb-2 ${isActive}" data-channel-id="${channel.channelId}">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="flex-grow-1">
-                            <div class="fw-bold text-truncate">${escapeHtml(channel.userEmail)}</div>
-                            <small class="text-muted text-truncate d-block">${lastMessagePreview}</small>
-                            ${lastMessageTime ? `<small class="text-muted">${lastMessageTime}</small>` : ''}
-                        </div>
-                        ${channel.messageCount ? `<span class="badge bg-primary">${channel.messageCount}</span>` : ''}
-                    </div>
-                </div>
+                <li data-channel-id="${channel.channelId}" data-user-email="${escapeHtml(channel.userEmail)}" class="${isActive}">
+                    <div class="user-email">${escapeHtml(channel.userEmail)}</div>
+                    <div class="last-message">${lastMessagePreview}</div>
+                    ${lastMessageTime ? `<div class="message-time">${lastMessageTime}</div>` : ''}
+                </li>
             `;
         });
         
-        channelsContainer.html(html);
+        userList.html(html);
     }
 
-    function selectChannel(channelId) {
-        if (channelId === currentChannelId) return;
+    function selectChannel(channelId, userEmail) {
+        if (channelId === currentChannelId) {
+            // On mobile, still show chat even if same channel
+            if ($(window).width() < 768) {
+                showChatPanel();
+            }
+            return;
+        }
 
         currentChannelId = channelId;
-        currentChannelEmail = channelId; // channelId is email
+        currentChannelEmail = userEmail;
 
         // Update UI
-        $('.channel-item').removeClass('active');
-        $(`.channel-item[data-channel-id="${channelId}"]`).addClass('active');
+        $('#user-list li').removeClass('active');
+        $(`#user-list li[data-channel-id="${channelId}"]`).addClass('active');
 
         // Update header
-        $('#current-user-email').text(currentChannelEmail);
-        $('#user-status').text('Đang online');
+        $('#current-chat-user').text(currentChannelEmail);
 
         // Enable chat input
         $('#message-input, #send-btn, #attach-btn').prop('disabled', false);
 
+        // Show chat panel on mobile
+        if ($(window).width() < 768) {
+            showChatPanel();
+        }
+
         // Clear messages and load new ones
-        $('#chat-messages').html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>');
+        showLoadingMessages();
 
         // Request messages for this channel
         if (socket && socket.connected) {
@@ -189,15 +210,34 @@ $(document).ready(function() {
         }
     }
 
+    function showUserList() {
+        $('.admin-container').removeClass('show-chat');
+    }
+
+    function showChatPanel() {
+        $('.admin-container').addClass('show-chat');
+    }
+
+    function showLoadingMessages() {
+        $('#messages-container').html(`
+            <div class="chat-empty-state">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+                <p>Đang tải tin nhắn...</p>
+            </div>
+        `);
+    }
+
     function displayMessages(messages) {
-        const chatContainer = $('#chat-messages');
+        const chatContainer = $('#messages-container');
         chatContainer.empty();
 
         if (!messages || messages.length === 0) {
             chatContainer.html(`
-                <div class="text-center text-muted py-5">
-                    <i class="fas fa-comment-dots fa-3x mb-3"></i>
-                    <h5>Bắt đầu cuộc trò chuyện</h5>
+                <div class="chat-empty-state">
+                    <i class="fas fa-comment-dots"></i>
+                    <h3>Bắt đầu cuộc trò chuyện</h3>
                     <p>Chưa có tin nhắn nào trong cuộc trò chuyện này</p>
                 </div>
             `);
@@ -212,24 +252,26 @@ $(document).ready(function() {
     }
 
     function appendMessage(message, animate = true) {
-        const chatContainer = $('#chat-messages');
+        const chatContainer = $('#messages-container');
+        
+        // Remove empty state if exists
+        chatContainer.find('.chat-empty-state').remove();
+        
         const messageClass = message.sender === 'admin' ? 'admin-message' : 'user-message';
         const senderName = message.sender === 'admin' ? 'Admin' : currentChannelEmail;
         
         let messageContent = '';
         if (message.type === 'image') {
-            messageContent = `<img src="${message.content}" alt="Hình ảnh" class="chat-image img-fluid">`;
+            messageContent = `<img src="${message.content}" alt="Hình ảnh" class="chat-image">`;
         } else {
-            messageContent = escapeHtml(message.content);
+            messageContent = `<div class="message-content">${escapeHtml(message.content)}</div>`;
         }
 
         const messageHtml = `
             <div class="message ${messageClass}">
-                <div class="message-bubble">
-                    ${messageContent}
-                </div>
+                ${messageContent}
                 <div class="message-meta">
-                    ${senderName} • ${formatDate(message.timestamp)}
+                    ${senderName} • ${formatTime(message.timestamp)}
                 </div>
             </div>
         `;
@@ -255,7 +297,7 @@ $(document).ready(function() {
         };
 
         socket.emit('chat:message', message);
-        $('#message-input').val('');
+        $('#message-input').val('').css('height', 'auto');
     }
 
     async function handleImageUpload(event) {
@@ -273,15 +315,27 @@ $(document).ready(function() {
         }
 
         const loadingToast = showToast('Đang tải lên', 'Đang xử lý hình ảnh...', 'info', false);
+        
+        // Show uploading message
+        const uploadingMessage = {
+            sender: 'admin',
+            type: 'text',
+            content: '📤 Đang tải lên hình ảnh...',
+            timestamp: new Date().toISOString()
+        };
+        appendMessage(uploadingMessage);
 
         try {
-            // Compress image
-            const options = { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: true };
-            const compressedFile = await imageCompression(file, options);
+            // Compress image if library is available
+            let fileToUpload = file;
+            if (window.imageCompression) {
+                const options = { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: true };
+                fileToUpload = await imageCompression(file, options);
+            }
             
             // Upload to server
             const formData = new FormData();
-            formData.append('image', compressedFile, compressedFile.name);
+            formData.append('image', fileToUpload, fileToUpload.name);
             
             const response = await fetch(`${SERVER_URL}/upload`, {
                 method: 'POST',
@@ -291,6 +345,9 @@ $(document).ready(function() {
             if (!response.ok) throw new Error('Upload thất bại!');
             
             const result = await response.json();
+            
+            // Remove uploading message
+            $('#messages-container .message').last().remove();
             
             // Send message with image
             const message = {
@@ -306,6 +363,7 @@ $(document).ready(function() {
 
         } catch (error) {
             console.error('Error uploading image:', error);
+            $('#messages-container .message').last().remove();
             loadingToast.hide();
             showToast('Lỗi', 'Đã có lỗi xảy ra khi gửi ảnh.', 'error');
         } finally {
@@ -314,7 +372,7 @@ $(document).ready(function() {
     }
 
     function scrollToBottom() {
-        const chatContainer = $('#chat-messages');
+        const chatContainer = $('#messages-container');
         chatContainer.scrollTop(chatContainer[0].scrollHeight);
     }
 
@@ -322,25 +380,38 @@ $(document).ready(function() {
         if (!lastMessage) return 'Chưa có tin nhắn';
         
         if (lastMessage.type === 'image') {
-            return '<i class="fas fa-image"></i> Hình ảnh';
+            return '📷 Hình ảnh';
         }
         
-        return lastMessage.content.length > 30 
-            ? lastMessage.content.substring(0, 30) + '...'
-            : lastMessage.content;
+        return lastMessage.content && lastMessage.content.length > 50 
+            ? lastMessage.content.substring(0, 50) + '...'
+            : lastMessage.content || 'Tin nhắn trống';
     }
 
     function getMessagePreview(message) {
         if (message.type === 'image') return 'đã gửi hình ảnh';
-        return message.content.length > 50 
+        return message.content && message.content.length > 50 
             ? message.content.substring(0, 50) + '...'
-            : message.content;
+            : message.content || 'tin nhắn trống';
     }
 
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
-        return date.toLocaleString('vi-VN');
+        return date.toLocaleString('vi-VN', { 
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+    }
+
+    function formatTime(timestamp) {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString('vi-VN', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
     }
 
     function escapeHtml(text) {
@@ -350,29 +421,29 @@ $(document).ready(function() {
     }
 
     function showToast(title, message, type = 'info', autoHide = true) {
-        const toastId = 'toast-' + Date.now();
-        const bgClass = type === 'success' ? 'bg-success' : 
-                       type === 'error' ? 'bg-danger' : 
-                       type === 'warning' ? 'bg-warning' : 'bg-info';
+        // Simple toast implementation - can be enhanced
+        const toastClass = type === 'success' ? 'alert-success' : 
+                          type === 'error' ? 'alert-danger' : 
+                          type === 'warning' ? 'alert-warning' : 'alert-info';
         
-        const toastHtml = `
-            <div class="toast" id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="toast-header ${bgClass} text-white">
-                    <strong class="me-auto">${escapeHtml(title)}</strong>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-                </div>
-                <div class="toast-body">
-                    ${escapeHtml(message)}
-                </div>
+        const toast = $(`
+            <div class="alert ${toastClass} alert-dismissible fade show" role="alert" style="margin-bottom: 10px;">
+                <strong>${escapeHtml(title)}</strong> ${escapeHtml(message)}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-        `;
+        `);
         
-        $('#toast-container').append(toastHtml);
-        const toastElement = $(`#${toastId}`);
-        const toast = new bootstrap.Toast(toastElement[0], { autohide: autoHide });
-        toast.show();
+        $('#toast-container').append(toast);
         
-        return toast;
+        if (autoHide) {
+            setTimeout(() => {
+                toast.alert('close');
+            }, 5000);
+        }
+        
+        return {
+            hide: () => toast.alert('close')
+        };
     }
 
     function showImageModal(src) {

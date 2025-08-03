@@ -39,6 +39,13 @@ app.engine('hbs', exphbs.engine({
         },
         eq: function(a, b) {
             return a === b;
+        },
+        gt: function(a, b) {
+            return a > b;
+        },
+        substring: function(str, start, end) {
+            if (!str) return '';
+            return str.substring(start, end);
         }
     }
 }));

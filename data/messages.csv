@@ -1,1 +1,7 @@
 messageId,channelId,sender,type,content,timestamp
+8a97c3f3-4b09-41a4-8eb0-6667d1346966,abc@abc.com,user,text,chào admin,2025-08-03T13:16:56.143Z
+45088f7b-0c76-4424-97b2-e3a67c9b4d4f,abc@abc.com,user,text,tôi là abc,2025-08-03T13:17:00.614Z
+b1f724fa-dae0-40c6-960e-9380aa6b5ef4,abc@abc.com,user,image,/uploads/1754227030446-265164013.jpg,2025-08-03T13:17:10.456Z
+40e1f346-b7b7-42b3-a860-046864ae28ec,abc@abc.com,admin,text,chào bạn,2025-08-03T13:17:24.909Z
+28d65f0e-b062-4496-880a-67a1117f8f40,abc@abc.com,admin,text,bạn cần gì,2025-08-03T13:17:59.450Z
+f9938f26-557b-4f69-84a6-7e749f4f177d,abc@abc.com,admin,image,/uploads/1754227101811-94908899.jpg,2025-08-03T13:18:21.820Z
