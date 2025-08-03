@@ -1,0 +1,309 @@
+/* Admin Dashboard CSS */
+body {
+    background-color: #f8f9fa;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container-fluid {
+    height: 100vh;
+}
+
+.row {
+    height: 100vh;
+}
+
+/* Sidebar Styles */
+.col-md-4, .col-lg-3 {
+    background-color: #ffffff;
+    border-right: 1px solid #dee2e6;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+/* Channel Item Styles */
+.channel-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef !important;
+}
+
+.channel-item:hover {
+    background-color: #e9ecef;
+    border-color: #007bff !important;
+    transform: translateY(-1px);
+}
+
+.channel-item.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff !important;
+}
+
+.channel-item.active .text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.channel-item.active .badge {
+    background-color: #fff !important;
+    color: #007bff !important;
+}
+
+/* Chat Messages Area */
+#chat-messages {
+    background-color: #ffffff;
+    background-image: 
+        radial-gradient(circle at 1px 1px, rgba(0,123,255,0.1) 1px, transparent 0);
+    background-size: 20px 20px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #f8f9fa;
+}
+
+#chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chat-messages::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+#chat-messages::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 4px;
+}
+
+#chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #0056b3;
+}
+
+/* Message Styles */
+.message {
+    margin-bottom: 15px;
+    max-width: 80%;
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-message {
+    margin-left: auto;
+}
+
+.user-message .message-bubble {
+    background-color: #007bff;
+    color: white;
+    border-radius: 18px 18px 4px 18px;
+    padding: 12px 16px;
+    position: relative;
+}
+
+.admin-message .message-bubble {
+    background-color: #f8f9fa;
+    color: #333;
+    border: 1px solid #e9ecef;
+    border-radius: 18px 18px 18px 4px;
+    padding: 12px 16px;
+    position: relative;
+}
+
+.message-meta {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+.user-message .message-meta {
+    text-align: right;
+}
+
+.admin-message .message-meta {
+    text-align: left;
+}
+
+/* Image Messages */
+.chat-image {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.chat-image:hover {
+    transform: scale(1.05);
+}
+
+/* Chat Input Area */
+#chat-input-area {
+    background-color: #ffffff;
+    border-top: 1px solid #dee2e6;
+}
+
+.input-group .btn {
+    border-color: #ced4da;
+}
+
+.input-group .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Connection Status */
+#connection-status {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+#connection-status.disconnected {
+    background-color: #dc3545 !important;
+    animation: none;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Toast Notifications */
+.toast {
+    min-width: 300px;
+}
+
+.toast-header {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .col-md-4 {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 80%;
+        height: 100vh;
+        z-index: 1050;
+        transition: left 0.3s ease;
+        background-color: white;
+    }
+    
+    .col-md-4.show {
+        left: 0;
+    }
+    
+    .col-md-8 {
+        width: 100%;
+    }
+    
+    .mobile-menu-btn {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1051;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+}
+
+/* Custom Scrollbar for Channels */
+.col-md-4::-webkit-scrollbar, .col-lg-3::-webkit-scrollbar {
+    width: 6px;
+}
+
+.col-md-4::-webkit-scrollbar-track, .col-lg-3::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.col-md-4::-webkit-scrollbar-thumb, .col-lg-3::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.col-md-4::-webkit-scrollbar-thumb:hover, .col-lg-3::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    opacity: 0.5;
+    margin-bottom: 1rem;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    font-style: italic;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.typing-dots {
+    display: inline-flex;
+    margin-left: 8px;
+}
+
+.typing-dots span {
+    height: 6px;
+    width: 6px;
+    background-color: #6c757d;
+    border-radius: 50%;
+    margin: 0 1px;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

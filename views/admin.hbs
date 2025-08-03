@@ -1,0 +1,119 @@
+<div class="row h-100">
+    <!-- Sidebar - Danh sách channels -->
+    <div class="col-md-4 col-lg-3 border-end bg-light">
+        <div class="p-3 border-bottom">
+            <h4 class="mb-0">
+                <i class="fas fa-comments text-primary me-2"></i>
+                Chat Dashboard
+            </h4>
+            <small class="text-muted">Admin Panel</small>
+        </div>
+        
+        <div class="p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Cuộc trò chuyện</h6>
+                <button class="btn btn-sm btn-outline-primary" id="refresh-channels">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            
+            <div id="channels-list">
+                {{#if channels}}
+                    {{#each channels}}
+                    <div class="channel-item p-2 border rounded mb-2" data-channel-id="{{channelId}}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-truncate">{{userEmail}}</div>
+                                {{#if lastMessage}}
+                                <small class="text-muted text-truncate d-block">
+                                    {{#eq lastMessage.type "image"}}
+                                        <i class="fas fa-image"></i> Hình ảnh
+                                    {{else}}
+                                        {{truncate lastMessage.content 30}}
+                                    {{/eq}}
+                                </small>
+                                <small class="text-muted">{{formatDate lastMessage.timestamp}}</small>
+                                {{else}}
+                                <small class="text-muted">Chưa có tin nhắn</small>
+                                {{/if}}
+                            </div>
+                            {{#if messageCount}}
+                            <span class="badge bg-primary">{{messageCount}}</span>
+                            {{/if}}
+                        </div>
+                    </div>
+                    {{/each}}
+                {{else}}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-comments fa-2x mb-2"></i>
+                        <p>Chưa có cuộc trò chuyện nào</p>
+                    </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="col-md-8 col-lg-9 d-flex flex-column">
+        <!-- Chat Header -->
+        <div class="border-bottom p-3 bg-white" id="chat-header">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                </div>
+                <div id="current-user-info">
+                    <div class="fw-bold" id="current-user-email">Chọn một cuộc trò chuyện</div>
+                    <small class="text-muted" id="user-status">để bắt đầu chat</small>
+                </div>
+                <div class="ms-auto">
+                    <span class="badge bg-success" id="connection-status">
+                        <i class="fas fa-circle me-1"></i>Đã kết nối
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="flex-grow-1 p-3 overflow-auto" id="chat-messages" style="height: 400px;">
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-comment-dots fa-3x mb-3"></i>
+                <h5>Chọn một cuộc trò chuyện</h5>
+                <p>Chọn cuộc trò chuyện từ danh sách bên trái để xem tin nhắn</p>
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="border-top p-3 bg-white" id="chat-input-area">
+            <div class="row g-2" id="message-form">
+                <div class="col">
+                    <div class="input-group">
+                        <button class="btn btn-outline-secondary" type="button" id="attach-btn" disabled>
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <input type="text" class="form-control" id="message-input" 
+                               placeholder="Nhập tin nhắn..." disabled>
+                        <button class="btn btn-primary" type="button" id="send-btn" disabled>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
+            <div class="form-text text-muted">
+                <i class="fas fa-info-circle"></i>
+                Nhấn Enter để gửi tin nhắn nhanh
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Spinner -->
+<div class="position-fixed top-50 start-50 translate-middle d-none" id="loading-spinner">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-container">
+</div>
