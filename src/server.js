@@ -9,7 +9,7 @@ const multer = require('multer');
 const cors = require('cors');
 
 const { testConnection } = require('./config/database');
-const { initializeDatabase, getAllChannels } = require('./services/dbService');
+const { initializeDatabase, getAllChannelsWithLastMessage } = require('./services/dbService');
 const initializeSocket = require('./services/socketService');
 
 // Khởi tạo
@@ -94,7 +94,7 @@ app.get('/', (req, res) => {
 
 app.get('/admin', async (req, res) => {
     try {
-        const channels = await getAllChannels();
+        const channels = await getAllChannelsWithLastMessage();
         res.render('admin', { 
             layout: 'main', 
             channels,

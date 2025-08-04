@@ -1,5 +1,5 @@
 // src/services/socketService.js
-const { getOrCreateChannel, getMessages, addMessage, getAllChannels } = require('./dbService');
+const { getOrCreateChannel, getMessages, addMessage, getAllChannelsWithLastMessage } = require('./dbService');
 
 function initializeSocket(io) {
     const adminNamespace = io.of("/admin"); // Namespace riêng cho admin
@@ -74,7 +74,7 @@ function initializeSocket(io) {
 
         socket.on('admin:getChannels', async () => {
             try {
-                const channels = await getAllChannels();
+                const channels = await getAllChannelsWithLastMessage();
                 socket.emit('admin:channels', channels);
             } catch (error) {
                 console.error('Error getting channels:', error);

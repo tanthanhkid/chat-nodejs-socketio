@@ -66,6 +66,58 @@ async function getAllChannels() {
 }
 
 /**
+ * Lấy tất cả channels kèm tin nhắn cuối cùng đầy đủ (cho admin dashboard)
+ * @returns {Array} Danh sách channels với lastMessage đầy đủ
+ */
+async function getAllChannelsWithLastMessage() {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(`
+      WITH last_messages AS (
+        SELECT DISTINCT ON (channel_id) 
+          channel_id,
+          message_id,
+          sender,
+          type,
+          content,
+          timestamp
+        FROM messages 
+        ORDER BY channel_id, timestamp DESC
+      )
+      SELECT 
+        c.id,
+        c.channel_id as "channelId",
+        c.user_email as "userEmail", 
+        c.created_at as "createdAt",
+        COUNT(m.id) as "messageCount",
+        CASE 
+          WHEN lm.message_id IS NOT NULL THEN 
+            json_build_object(
+              'messageId', lm.message_id,
+              'sender', lm.sender,
+              'type', lm.type,
+              'content', lm.content,
+              'timestamp', lm.timestamp
+            )
+          ELSE NULL 
+        END as "lastMessage"
+      FROM channels c
+      LEFT JOIN messages m ON c.channel_id = m.channel_id
+      LEFT JOIN last_messages lm ON c.channel_id = lm.channel_id
+      GROUP BY c.id, c.channel_id, c.user_email, c.created_at, lm.message_id, lm.sender, lm.type, lm.content, lm.timestamp
+      ORDER BY lm.timestamp DESC NULLS LAST, c.created_at DESC
+    `);
+    
+    return result.rows;
+  } catch (error) {
+    console.error('Error getting channels with last message:', error.message);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
  * Lấy hoặc tạo kênh chat cho user
  * @param {string} email - Email của user
  * @returns {Object} Thông tin kênh
@@ -226,6 +278,7 @@ async function deleteOldMessages(daysOld = 90) {
 module.exports = {
   initializeDatabase,
   getAllChannels,
+  getAllChannelsWithLastMessage,
   getOrCreateChannel,
   getMessages,
   addMessage,
