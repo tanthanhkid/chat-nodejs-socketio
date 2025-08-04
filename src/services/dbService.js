@@ -86,10 +86,10 @@ async function getAllChannelsWithLastMessage() {
       )
       SELECT 
         c.id,
-        c.channel_id as "channelId",
-        c.user_email as "userEmail", 
-        c.created_at as "createdAt",
-        COUNT(m.id) as "messageCount",
+        c.channel_id,
+        c.user_email, 
+        c.created_at,
+        COUNT(m.id) as message_count,
         CASE 
           WHEN lm.message_id IS NOT NULL THEN 
             json_build_object(
@@ -100,7 +100,7 @@ async function getAllChannelsWithLastMessage() {
               'timestamp', lm.timestamp
             )
           ELSE NULL 
-        END as "lastMessage"
+        END as last_message
       FROM channels c
       LEFT JOIN messages m ON c.channel_id = m.channel_id
       LEFT JOIN last_messages lm ON c.channel_id = lm.channel_id
@@ -108,7 +108,17 @@ async function getAllChannelsWithLastMessage() {
       ORDER BY lm.timestamp DESC NULLS LAST, c.created_at DESC
     `);
     
-    return result.rows;
+    // Convert snake_case to camelCase for frontend compatibility
+    const channels = result.rows.map(row => ({
+      id: row.id,
+      channelId: row.channel_id,
+      userEmail: row.user_email,
+      createdAt: row.created_at,
+      messageCount: row.message_count,
+      lastMessage: row.last_message
+    }));
+    
+    return channels;
   } catch (error) {
     console.error('Error getting channels with last message:', error.message);
     throw error;
