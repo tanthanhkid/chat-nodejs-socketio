@@ -1,11 +1,14 @@
 {
   "name": "chat-nodejs-socketio",
-  "version": "1.1.0",
-  "description": "Chat system thời gian thực giữa User và Admin với Socket.IO",
+  "version": "2.0.0",
+  "description": "Chat system thời gian thực giữa User và Admin với Socket.IO và PostgreSQL",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "db:up": "cd database && docker-compose up -d",
+    "db:down": "cd database && docker-compose down",
+    "db:logs": "cd database && docker-compose logs -f postgres"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -13,13 +16,13 @@
     "express-handlebars": "^7.1.2",
     "multer": "^1.4.5-lts.1",
     "cors": "^2.8.5",
-    "csv-parse": "^5.4.0",
-    "csv-stringify": "^6.4.0"
+    "pg": "^8.11.3",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["chat", "socket.io", "nodejs", "express", "real-time"],
+  "keywords": ["chat", "socket.io", "nodejs", "express", "real-time", "postgresql"],
   "author": "ThanhTT88",
   "license": "MIT"
 }

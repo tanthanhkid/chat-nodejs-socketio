@@ -1,5 +1,5 @@
 // src/services/socketService.js
-const { getOrCreateChannel, getMessages, addMessage } = require('./storageService');
+const { getOrCreateChannel, getMessages, addMessage, getAllChannels } = require('./dbService');
 
 function initializeSocket(io) {
     const adminNamespace = io.of("/admin"); // Namespace riêng cho admin
@@ -8,31 +8,31 @@ function initializeSocket(io) {
     io.on('connection', (socket) => {
         console.log(`A user connected: ${socket.id}`);
 
-        socket.on('user:join', ({ email }) => {
+        socket.on('user:join', async ({ email }) => {
             if (!email) {
                 socket.emit('error', { message: 'Email is required' });
                 return;
             }
 
             try {
-                const channel = getOrCreateChannel(email);
-                socket.join(channel.channelId);
+                const channel = await getOrCreateChannel(email);
+                socket.join(channel.channel_id);
                 socket.userEmail = email;
                 
-                const messages = getMessages(channel.channelId);
+                const messages = await getMessages(channel.channel_id);
                 socket.emit('chat:history', messages);
                 
                 // Thông báo cho admin có user mới
                 adminNamespace.emit('admin:newUser', channel);
                 
-                console.log(`User ${email} joined channel ${channel.channelId}`);
+                console.log(`User ${email} joined channel ${channel.channel_id}`);
             } catch (error) {
                 console.error('Error joining user:', error);
                 socket.emit('error', { message: 'Failed to join chat' });
             }
         });
 
-        socket.on('chat:message', (message) => {
+        socket.on('chat:message', async (message) => {
             try {
                 if (!socket.userEmail) {
                     socket.emit('error', { message: 'Please join a channel first' });
@@ -47,7 +47,7 @@ function initializeSocket(io) {
                     timestamp: new Date().toISOString()
                 };
 
-                const savedMessage = addMessage(messageData);
+                const savedMessage = await addMessage(messageData);
                 
                 // Gửi cho admin
                 adminNamespace.emit('admin:newMessage', savedMessage);
@@ -72,10 +72,9 @@ function initializeSocket(io) {
             socket.emit('admin:connected', { message: 'Connected as admin' });
         });
 
-        socket.on('admin:getChannels', () => {
+        socket.on('admin:getChannels', async () => {
             try {
-                const { getChannelWithLastMessage } = require('./storageService');
-                const channels = getChannelWithLastMessage();
+                const channels = await getAllChannels();
                 socket.emit('admin:channels', channels);
             } catch (error) {
                 console.error('Error getting channels:', error);
@@ -83,9 +82,9 @@ function initializeSocket(io) {
             }
         });
 
-        socket.on('admin:getMessages', ({ channelId }) => {
+        socket.on('admin:getMessages', async ({ channelId }) => {
             try {
-                const messages = getMessages(channelId);
+                const messages = await getMessages(channelId);
                 socket.emit('admin:messages', { channelId, messages });
             } catch (error) {
                 console.error('Error getting messages:', error);
@@ -93,7 +92,7 @@ function initializeSocket(io) {
             }
         });
 
-        socket.on('chat:message', (message) => {
+        socket.on('chat:message', async (message) => {
             try {
                 const messageData = {
                     channelId: message.channelId,
@@ -103,7 +102,7 @@ function initializeSocket(io) {
                     timestamp: new Date().toISOString()
                 };
 
-                const savedMessage = addMessage(messageData);
+                const savedMessage = await addMessage(messageData);
                 
                 // Gửi cho user trong channel đó
                 io.to(message.channelId).emit('chat:message', savedMessage);

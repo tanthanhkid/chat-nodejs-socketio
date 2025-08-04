@@ -1,4 +1,5 @@
 // src/server.js
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io");
@@ -7,7 +8,8 @@ const path = require('path');
 const multer = require('multer');
 const cors = require('cors');
 
-const { initializeStorage, getChannelWithLastMessage } = require('./services/storageService');
+const { testConnection } = require('./config/database');
+const { initializeDatabase, getAllChannels } = require('./services/dbService');
 const initializeSocket = require('./services/socketService');
 
 // Khởi tạo
@@ -90,9 +92,9 @@ app.get('/', (req, res) => {
     `);
 });
 
-app.get('/admin', (req, res) => {
+app.get('/admin', async (req, res) => {
     try {
-        const channels = getChannelWithLastMessage();
+        const channels = await getAllChannels();
         res.render('admin', { 
             layout: 'main', 
             channels,
@@ -192,14 +194,40 @@ app.use((req, res) => {
     res.status(404).send('Page not found');
 });
 
-// Khởi tạo Storage và Socket
-initializeStorage();
-initializeSocket(io);
+// Khởi tạo Database và Socket
+async function startServer() {
+    try {
+        // Kiểm tra kết nối database
+        console.log('🔍 Testing database connection...');
+        const isConnected = await testConnection();
+        
+        if (!isConnected) {
+            console.error('❌ Cannot connect to database. Please check your PostgreSQL connection.');
+            console.log('💡 Make sure to run: npm run db:up');
+            process.exit(1);
+        }
+        
+        // Khởi tạo database
+        await initializeDatabase();
+        
+        // Khởi tạo Socket.IO
+        initializeSocket(io);
+        
+        // Chạy server
+        const PORT = process.env.PORT || 3000;
+        server.listen(PORT, () => {
+            console.log('🎉 Chat System started successfully!');
+            console.log(`🚀 Server running on http://localhost:${PORT}`);
+            console.log(`📊 Admin Dashboard: http://localhost:${PORT}/admin`);
+            console.log(`🧪 Widget Example: http://localhost:${PORT}/example`);
+            console.log('📱 Ready for chat connections!');
+        });
+        
+    } catch (error) {
+        console.error('❌ Failed to start server:', error.message);
+        process.exit(1);
+    }
+}
 
-// Chạy server
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`🚀 Chat System server is running on http://localhost:${PORT}`);
-    console.log(`📊 Admin Dashboard: http://localhost:${PORT}/admin`);
-    console.log(`🧪 Widget Example: http://localhost:${PORT}/example`);
-});
+// Start the server
+startServer();
