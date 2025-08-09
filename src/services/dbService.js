@@ -271,7 +271,7 @@ async function deleteOldMessages(daysOld = 90) {
   const client = await pool.connect();
   try {
     const result = await client.query(
-      'DELETE FROM messages WHERE timestamp < NOW() - INTERVAL $1 day',
+      "DELETE FROM messages WHERE timestamp < NOW() - ($1 || ' days')::interval",
       [daysOld]
     );
     
