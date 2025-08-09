@@ -9,7 +9,7 @@ The core technologies used are:
 *   **Backend:** Node.js with Express.js
 *   **Real-time Communication:** Socket.IO
 *   **Frontend (Widget):** JavaScript, jQuery, and Handlebars.js for templating.
-*   **Data Storage:** Chat history is stored in CSV files.
+*   **Data Storage:** Chat history is stored in a PostgreSQL database (previously in CSV files).
 
 ## Building and Running
 
@@ -31,5 +31,5 @@ npm start
 
 *   **Code Style:** The project follows standard JavaScript conventions.
 *   **File Structure:** The project is organized into `public`, `src`, and `views` directories, separating static assets, server-side logic, and view templates.
-*   **Data Handling:** Data is stored in CSV files in the `data` directory. The `storageService.js` module encapsulates all file I/O operations.
+*   **Data Handling:** Data is persisted in a PostgreSQL database. Earlier versions stored chat data in CSV files.
 *   **Real-time Logic:** All Socket.IO related logic is handled in the `socketService.js` module.
