@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS messages (
     type VARCHAR(10) CHECK (type IN ('text', 'image')) NOT NULL,
     content TEXT NOT NULL,
     timestamp TIMESTAMP DEFAULT NOW(),
+    admin_read_at TIMESTAMP,
+    user_read_at TIMESTAMP,
     FOREIGN KEY (channel_id) REFERENCES channels(channel_id) ON DELETE CASCADE
 );
 

@@ -66,6 +66,33 @@ async function getAllChannels() {
 }
 
 /**
+ * Đánh dấu tin nhắn đã đọc
+ * @param {string} channelId - ID của kênh
+ * @param {'user'|'admin'} reader - Bên đọc
+ * @param {string[]} messageIds - Danh sách ID tin nhắn
+ */
+async function markMessagesRead(channelId, reader, messageIds = []) {
+  if (!messageIds.length) return 0;
+  const client = await pool.connect();
+  try {
+    const field = reader === 'user' ? 'user_read_at' : 'admin_read_at';
+    const sender = reader === 'user' ? 'admin' : 'user';
+    const result = await client.query(
+      `UPDATE messages
+       SET ${field} = NOW()
+       WHERE channel_id = $1 AND sender = $2 AND message_id = ANY($3::uuid[])`,
+      [channelId, sender, messageIds]
+    );
+    return result.rowCount;
+  } catch (error) {
+    console.error('Error marking messages read:', error.message);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
  * Lấy tất cả channels kèm tin nhắn cuối cùng đầy đủ (cho admin dashboard)
  * @returns {Array} Danh sách channels với lastMessage đầy đủ
  */
@@ -172,15 +199,17 @@ async function getMessages(channelId) {
   const client = await pool.connect();
   try {
     const result = await client.query(
-      `SELECT 
+      `SELECT
         message_id as "messageId",
         channel_id as "channelId",
         sender,
         type,
         content,
-        timestamp
-      FROM messages 
-      WHERE channel_id = $1 
+        timestamp,
+        admin_read_at as "adminReadAt",
+        user_read_at as "userReadAt"
+      FROM messages
+      WHERE channel_id = $1
       ORDER BY timestamp ASC`,
       [channelId]
     );
@@ -205,20 +234,22 @@ async function addMessage(messageData) {
     const { channelId, sender, type, content, timestamp } = messageData;
     
     const result = await client.query(
-      `INSERT INTO messages (channel_id, sender, type, content, timestamp) 
-       VALUES ($1, $2, $3, $4, $5) 
-       RETURNING 
+      `INSERT INTO messages (channel_id, sender, type, content, timestamp)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING
          message_id as "messageId",
          channel_id as "channelId",
          sender,
          type,
          content,
-         timestamp`,
+         timestamp,
+         admin_read_at as "adminReadAt",
+         user_read_at as "userReadAt"`,
       [
-        channelId, 
-        sender, 
-        type, 
-        content, 
+        channelId,
+        sender,
+        type,
+        content,
         timestamp || new Date()
       ]
     );
@@ -292,6 +323,7 @@ module.exports = {
   getOrCreateChannel,
   getMessages,
   addMessage,
+  markMessagesRead,
   getSystemStats,
   deleteOldMessages
 };
