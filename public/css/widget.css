@@ -334,6 +334,13 @@
     padding: 0 4px;
 }
 
+.read-status {
+    color: #28a745;
+    margin-left: 6px;
+    font-weight: 500;
+    display: none;
+}
+
 .message-image {
     max-width: 100%;
     height: auto;

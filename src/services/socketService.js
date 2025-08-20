@@ -1,5 +1,5 @@
 // src/services/socketService.js
-const { getOrCreateChannel, getMessages, addMessage, getAllChannelsWithLastMessage } = require('./dbService');
+const { getOrCreateChannel, getMessages, addMessage, getAllChannelsWithLastMessage, markMessagesRead } = require('./dbService');
 
 function initializeSocket(io) {
     const adminNamespace = io.of("/admin"); // Namespace riêng cho admin
@@ -35,7 +35,7 @@ function initializeSocket(io) {
         socket.on('chat:message', async (message) => {
             try {
                 if (!socket.userEmail) {
-                    socket.emit('error', { message: 'Please join a channel first' });
+                    socket.emit('error', { message: 'Email is required' });
                     return;
                 }
 
@@ -48,14 +48,31 @@ function initializeSocket(io) {
                 };
 
                 const savedMessage = await addMessage(messageData);
-                
+
+                // Gửi lại cho user với ID tin nhắn
+                socket.emit('chat:messageSent', savedMessage);
+
                 // Gửi cho admin
                 adminNamespace.emit('admin:newMessage', savedMessage);
-                
+
                 console.log(`Message from ${socket.userEmail}:`, savedMessage);
             } catch (error) {
                 console.error('Error handling user message:', error);
                 socket.emit('error', { message: 'Failed to send message' });
+            }
+        });
+
+        socket.on('chat:read', async ({ messageIds }) => {
+            try {
+                if (!socket.userEmail || !Array.isArray(messageIds)) return;
+                await markMessagesRead(socket.userEmail, 'user', messageIds);
+                adminNamespace.emit('chat:read', {
+                    channelId: socket.userEmail,
+                    reader: 'user',
+                    messageIds
+                });
+            } catch (error) {
+                console.error('Error marking messages read (user):', error);
             }
         });
 
@@ -89,6 +106,24 @@ function initializeSocket(io) {
             } catch (error) {
                 console.error('Error getting messages:', error);
                 socket.emit('error', { message: 'Failed to get messages' });
+            }
+        });
+
+        socket.on('chat:read', async ({ channelId, messageIds }) => {
+            try {
+                if (!channelId || !Array.isArray(messageIds)) return;
+                await markMessagesRead(channelId, 'admin', messageIds);
+                io.to(channelId).emit('chat:read', {
+                    reader: 'admin',
+                    messageIds
+                });
+                adminNamespace.emit('chat:read', {
+                    channelId,
+                    reader: 'admin',
+                    messageIds
+                });
+            } catch (error) {
+                console.error('Error marking messages read (admin):', error);
             }
         });
 

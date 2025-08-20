@@ -49,13 +49,14 @@ $(document).ready(function() {
 
         socket.on('admin:newMessage', (message) => {
             console.log('New message received:', message);
-            
+
             // Update channels list to show new message
             refreshChannels();
-            
+
             // If this message is for current channel, display it
             if (message.channelId === currentChannelId) {
                 appendMessage(message);
+                socket.emit('chat:read', { channelId: currentChannelId, messageIds: [message.messageId] });
             } else {
                 // Show notification for other channels
                 showToast('Tin nhắn mới', `Từ ${message.channelId}: ${getMessagePreview(message)}`, 'info');
@@ -66,6 +67,12 @@ $(document).ready(function() {
             console.log('Message sent successfully:', message);
             appendMessage(message);
             refreshChannels();
+        });
+
+        socket.on('chat:read', ({ channelId, messageIds, reader }) => {
+            if (reader === 'user' && channelId === currentChannelId) {
+                markMessagesRead(messageIds);
+            }
         });
 
         socket.on('error', (error) => {
@@ -244,11 +251,18 @@ $(document).ready(function() {
             return;
         }
 
+        const userIds = [];
         messages.forEach(message => {
             appendMessage(message, false);
+            if (message.sender === 'user' && !message.adminReadAt) {
+                userIds.push(message.messageId);
+            }
         });
 
         scrollToBottom();
+        if (socket && userIds.length) {
+            socket.emit('chat:read', { channelId: currentChannelId, messageIds: userIds });
+        }
     }
 
     function appendMessage(message, animate = true) {
@@ -267,11 +281,13 @@ $(document).ready(function() {
             messageContent = `<div class="message-content">${escapeHtml(message.content)}</div>`;
         }
 
+        const readText = message.sender === 'admin' && message.userReadAt ? 'Đã xem' : '';
         const messageHtml = `
-            <div class="message ${messageClass}">
+            <div class="message ${messageClass}" data-id="${message.messageId}">
                 ${messageContent}
                 <div class="message-meta">
                     ${senderName} • ${formatTime(message.timestamp)}
+                    <span class="read-status"${readText ? '' : ' style="display:none;"'}>${readText}</span>
                 </div>
             </div>
         `;
@@ -284,6 +300,15 @@ $(document).ready(function() {
         }
 
         scrollToBottom();
+    }
+
+    function markMessagesRead(messageIds) {
+        messageIds.forEach(id => {
+            const el = $(`#messages-container .message[data-id="${id}"] .read-status`);
+            if (el.length) {
+                el.text('Đã xem').show();
+            }
+        });
     }
 
     function sendMessage() {

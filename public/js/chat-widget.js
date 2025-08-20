@@ -274,11 +274,24 @@
 
         socket.on('chat:message', (message) => {
             appendMessage(message);
-            
+            if (socket) {
+                socket.emit('chat:read', { messageIds: [message.messageId] });
+            }
+
             // Show notification if window is minimized
             if ($('#chat-window').hasClass('chat-hidden')) {
                 incrementUnreadCount();
                 showNotification(message);
+            }
+        });
+
+        socket.on('chat:messageSent', (message) => {
+            appendMessage(message);
+        });
+
+        socket.on('chat:read', ({ messageIds, reader }) => {
+            if (reader === 'admin') {
+                markMessagesRead(messageIds);
             }
         });
 
@@ -328,8 +341,17 @@
             return;
         }
 
-        messages.forEach(message => appendMessage(message, false));
+        const adminIds = [];
+        messages.forEach(message => {
+            appendMessage(message, false);
+            if (message.sender === 'admin' && !message.userReadAt) {
+                adminIds.push(message.messageId);
+            }
+        });
         scrollToBottom();
+        if (socket && adminIds.length) {
+            socket.emit('chat:read', { messageIds: adminIds });
+        }
     }
 
     function appendMessage(message, animate = true) {
@@ -337,7 +359,7 @@
         const container = $('.messages-container');
         const messageClass = message.sender === 'user' ? 'message-user' : 'message-admin';
         const senderName = message.sender === 'user' ? 'Bạn' : 'Admin';
-        
+
         let messageContent = '';
         if (message.type === 'image') {
             messageContent = `<img src="${SERVER_URL}${message.content}" alt="Hình ảnh" class="message-image" loading="lazy">`;
@@ -345,13 +367,15 @@
             messageContent = escapeHtml(message.content);
         }
 
+        const readText = message.sender === 'user' && message.adminReadAt ? 'Đã xem' : '';
         const messageHtml = `
-            <div class="message ${messageClass}">
+            <div class="message ${messageClass}" data-id="${message.messageId}">
                 <div class="message-content">
                     ${messageContent}
                 </div>
                 <div class="message-meta">
                     ${senderName} • ${formatTime(message.timestamp)}
+                    <span class="read-status"${readText ? '' : ' style="display:none;"'}>${readText}</span>
                 </div>
             </div>
         `;
@@ -384,15 +408,11 @@
         }
 
         const message = {
-            sender: 'user',
             type: 'text',
-            content: content,
-            channelId: userEmail,
-            timestamp: new Date().toISOString()
+            content: content
         };
 
         socket.emit('chat:message', message);
-        appendMessage(message);
         $('#message-input').val('').css('height', 'auto');
     }
 
@@ -446,15 +466,11 @@
             
             // Send image message
             const message = {
-                sender: 'user',
                 type: 'image',
-                content: result.url,
-                channelId: userEmail,
-                timestamp: new Date().toISOString()
+                content: result.url
             };
 
             socket.emit('chat:message', message);
-            appendMessage(message);
 
         } catch (error) {
             console.error('Error uploading image:', error);
@@ -467,19 +483,24 @@
 
     function processMessageQueue() {
         if (messageQueue.length === 0) return;
-        
+
         messageQueue.forEach(msg => {
             if (socket && isConnected) {
-                socket.emit('chat:message', {
-                    ...msg,
-                    sender: 'user',
-                    channelId: userEmail,
-                    timestamp: new Date().toISOString()
-                });
+                socket.emit('chat:message', msg);
             }
         });
-        
+
         messageQueue = [];
+    }
+
+    function markMessagesRead(messageIds) {
+        const $ = window.jQuery;
+        messageIds.forEach(id => {
+            const el = $(`.messages-container .message[data-id="${id}"] .read-status`);
+            if (el.length) {
+                el.text('Đã xem').show();
+            }
+        });
     }
 
     function incrementUnreadCount() {
