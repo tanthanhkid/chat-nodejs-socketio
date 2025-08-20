@@ -38,7 +38,7 @@ fi
 # Khởi động PostgreSQL database
 echo "🐘 Khởi động PostgreSQL database..."
 cd database
-docker-compose up -d
+docker compose up -d
 
 # Đợi database khởi động
 echo "⏳ Đợi database khởi động..."
@@ -46,7 +46,7 @@ sleep 10
 
 # Kiểm tra database đã sẵn sàng chưa
 echo "🔍 Kiểm tra kết nối database..."
-until docker-compose exec -T postgres pg_isready -U postgres; do
+until docker compose exec -T postgres pg_isready -U postgres; do
     echo "⏳ Đợi database sẵn sàng..."
     sleep 2
 done

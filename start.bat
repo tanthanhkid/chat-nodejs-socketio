@@ -39,7 +39,7 @@ if not exist "public\uploads" (
 REM Khởi động PostgreSQL database
 echo 🐘 Khởi động PostgreSQL database...
 cd database
-docker-compose up -d
+docker compose up -d
 
 REM Đợi database khởi động
 echo ⏳ Đợi database khởi động...
@@ -48,7 +48,7 @@ timeout /t 10 /nobreak >nul
 REM Kiểm tra database đã sẵn sàng chưa
 echo 🔍 Kiểm tra kết nối database...
 :check_db
-docker-compose exec -T postgres pg_isready -U postgres >nul 2>&1
+docker compose exec -T postgres pg_isready -U postgres >nul 2>&1
 if errorlevel 1 (
     echo ⏳ Đợi database sẵn sàng...
     timeout /t 2 /nobreak >nul
