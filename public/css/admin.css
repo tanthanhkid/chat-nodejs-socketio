@@ -212,6 +212,7 @@ body {
 /* Mobile navigation improvements */
 @media (max-width: 991.98px) {
     .navbar-collapse {
+        z-index: 1000;
         background-color: rgba(0, 123, 255, 0.95);
         border-radius: 8px;
         margin-top: 0.5rem;
