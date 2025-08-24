@@ -99,7 +99,8 @@ app.get('/admin', async (req, res) => {
         res.render('admin', { 
             layout: 'main', 
             channels,
-            title: 'Admin Chat Dashboard'
+            title: 'Admin Chat Dashboard',
+            currentPage: 'dashboard'
         });
     } catch (error) {
         console.error('Error rendering admin page:', error);
@@ -136,7 +137,8 @@ app.get('/broadcast', async (req, res) => {
     try {
         res.render('broadcast', { 
             layout: 'main', 
-            title: 'Broadcast Messages'
+            title: 'Broadcast Messages',
+            currentPage: 'broadcast'
         });
     } catch (error) {
         console.error('Error rendering broadcast page:', error);
