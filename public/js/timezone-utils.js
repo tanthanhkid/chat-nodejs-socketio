@@ -9,9 +9,12 @@
 function toVietnamTime(timestamp) {
     const date = new Date(timestamp);
     
-    // Since server is already in GMT+7, we just need to ensure proper formatting
-    // No conversion needed, just return the date as is
-    return date;
+    // Database stores timestamps in UTC, but server runs in GMT+7
+    // We need to convert from UTC to GMT+7
+    // Since the timestamp is already in UTC, we add 7 hours to get Vietnam time
+    const vietnamTime = new Date(date.getTime() + (7 * 60 * 60 * 1000));
+    
+    return vietnamTime;
 }
 
 /**

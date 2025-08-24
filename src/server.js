@@ -30,8 +30,9 @@ app.engine('hbs', exphbs.engine({
         formatDate: function(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
-            // Server is already in GMT+7, just format properly
-            return date.toLocaleString('vi-VN', {
+            // Database stores timestamps in UTC, convert to GMT+7
+            const vietnamTime = new Date(date.getTime() + (7 * 60 * 60 * 1000));
+            return vietnamTime.toLocaleString('vi-VN', {
                 day: '2-digit',
                 month: '2-digit',
                 hour: '2-digit',
