@@ -1047,8 +1047,7 @@ body {
         align-items: center;
     }
     
-    .message.admin .message-content {
-        /* max-width: 85%; */
+    .message.admin .message-content { 
         min-width: 60px;
     }
     
@@ -1408,8 +1407,7 @@ body {
         min-height: 40px;
     }
     
-    .message.admin .message-content {
-        /* max-width: 90%; */
+    .message.admin .message-content { 
         min-width: 50px;
     }
     
@@ -1472,8 +1470,7 @@ body {
         font-size: 0.9rem;
     }
     
-    .message.admin .message-content {
-        /* max-width: 80%; */
+    .message.admin .message-content { 
         min-width: 60px;
     }
     
