@@ -144,6 +144,13 @@ body {
     width: 100%;
     flex-shrink: 0;
     background-color: #f9f9f9;
+    /* Đảm bảo chat panel luôn có kích thước tối thiểu */
+    min-width: 0;
+    min-height: 0;
+    /* Cải thiện hiệu suất render */
+    will-change: transform;
+    /* Đảm bảo không bị overflow */
+    overflow: hidden;
 }
 
 /* Ẩn panel chat trên mobile ban đầu */
@@ -292,6 +299,13 @@ body {
     align-items: center;
     gap: 15px;
     flex-shrink: 0;
+    /* Đảm bảo header luôn ở trên cùng */
+    position: relative;
+    z-index: 5;
+    /* Tối ưu cho mobile */
+    min-height: 60px;
+    /* Đảm bảo không bị che khuất bởi status bar trên mobile */
+    padding-top: max(15px, env(safe-area-inset-top));
 }
 
 #back-to-users-btn {
@@ -338,6 +352,13 @@ body {
     overflow-x: auto;
     /* Đảm bảo tin nhắn không bị cắt */
     scroll-behavior: smooth;
+    /* Cải thiện hiệu suất scroll */
+    -webkit-overflow-scrolling: touch;
+    /* Đảm bảo container có kích thước tối thiểu */
+    min-height: 0;
+    min-width: 0;
+    /* Tối ưu cho mobile */
+    position: relative;
 }
 
 .chat-empty-state {
@@ -519,6 +540,13 @@ body {
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
+    /* Đảm bảo input area luôn ở dưới cùng */
+    position: relative;
+    z-index: 10;
+    /* Tối ưu cho mobile */
+    min-height: 60px;
+    /* Đảm bảo không bị che khuất bởi keyboard trên mobile */
+    padding-bottom: max(15px, env(safe-area-inset-bottom));
 }
 
 #attach-btn {
@@ -550,6 +578,15 @@ body {
     font-size: 0.95rem;
     outline: none;
     transition: border-color 0.2s;
+    /* Tối ưu cho mobile */
+    min-height: 40px;
+    /* Đảm bảo input không bị zoom trên iOS */
+    font-size: 16px;
+    /* Cải thiện UX trên mobile */
+    -webkit-appearance: none;
+    appearance: none;
+    /* Đảm bảo text không bị cắt */
+    line-height: 1.4;
 }
 
 #message-input:focus {
@@ -602,6 +639,21 @@ body {
 
 /* --- Tablet Breakpoint (>= 768px) --- */
 @media (min-width: 768px) {
+    /* Reset mobile styles */
+    #chat-panel {
+        position: relative;
+        transform: none;
+        z-index: auto;
+    }
+    
+    .admin-container:not(.show-chat) #chat-panel {
+        transform: none;
+    }
+    
+    .admin-container.show-chat #chat-panel {
+        transform: none;
+    }
+    
     /* Nút quay lại không cần thiết trên màn hình lớn */
     #back-to-users-btn {
         display: none;
@@ -616,6 +668,8 @@ body {
     #chat-panel {
         width: auto; /* Tự động chiếm phần còn lại */
         flex-grow: 1;
+        /* Đảm bảo chat panel có đủ không gian */
+        min-width: 0;
     }
     
     /* Reset lại hiệu ứng trượt của mobile */
@@ -623,16 +677,85 @@ body {
         margin-left: 0;
     }
 
+    /* Chat header improvements */
+    #chat-panel-header {
+        padding: 18px 25px;
+        min-height: 70px;
+        /* Đảm bảo header có đủ không gian */
+        gap: 18px;
+    }
+    
+    #current-chat-user {
+        font-size: 1.1rem;
+        max-width: none;
+    }
+    
+    #connection-status {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+    }
+
+    /* Messages improvements */
     .message {
         max-width: 80%;
+        margin-bottom: 20px;
+    }
+    
+    .message-content {
+        padding: 12px 18px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        min-height: 48px;
     }
 
     #messages-container {
-        padding: 30px;
+        padding: 25px;
+        /* Tối ưu scroll cho tablet */
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f7fafc;
+    }
+    
+    /* Custom scrollbar cho webkit browsers */
+    #messages-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    #messages-container::-webkit-scrollbar-track {
+        background: #f7fafc;
+    }
+    
+    #messages-container::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 3px;
+    }
+    
+    #messages-container::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
     }
 
+    /* Message input improvements */
     .message-input-area {
-        padding: 20px 30px;
+        padding: 18px 25px;
+        min-height: 70px;
+        gap: 12px;
+    }
+    
+    #message-input {
+        min-height: 48px;
+        padding: 14px 18px;
+        font-size: 0.95rem;
+    }
+    
+    #send-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 1.1rem;
+    }
+    
+    #attach-btn {
+        min-width: 48px;
+        height: 48px;
+        font-size: 1.1rem;
     }
     
     /* Header improvements for tablet */
@@ -647,15 +770,12 @@ body {
 
 /* --- Desktop Breakpoint (>= 1024px) --- */
 @media (min-width: 1024px) {
+    /* User list improvements */
     #user-list-panel {
         width: 320px;
         min-width: 320px;
     }
-
-    .message {
-        max-width: 85%;
-    }
-
+    
     #user-list-panel h2 {
         font-size: 1.3rem;
         padding: 25px;
@@ -663,14 +783,150 @@ body {
 
     #user-list li {
         padding: 18px 25px;
+        /* Tăng kích thước touch target cho desktop */
+        min-height: 70px;
     }
 
+    /* Chat panel improvements */
+    #chat-panel {
+        /* Đảm bảo chat panel có đủ không gian trên desktop */
+        min-width: 600px;
+    }
+
+    /* Chat header improvements */
     #chat-panel-header {
         padding: 20px 30px;
+        min-height: 80px;
+        gap: 20px;
     }
 
     #current-chat-user {
         font-size: 1.2rem;
+        font-weight: 600;
+    }
+    
+    #connection-status {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+        border-radius: 16px;
+    }
+
+    /* Messages improvements */
+    .message {
+        max-width: 85%;
+        margin-bottom: 24px;
+    }
+    
+    .message-content {
+        padding: 14px 20px;
+        font-size: 1rem;
+        line-height: 1.6;
+        min-height: 52px;
+        /* Tối ưu cho tin nhắn dài */
+        max-width: 600px;
+    }
+    
+    /* Message meta improvements */
+    .message-meta {
+        margin-top: 6px;
+        font-size: 0.8rem;
+    }
+    
+    .message-time {
+        font-size: 0.8rem;
+    }
+    
+    .read-status {
+        font-size: 0.75rem;
+    }
+
+    #messages-container {
+        padding: 30px;
+        /* Tối ưu scroll cho desktop */
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f7fafc;
+    }
+    
+    /* Custom scrollbar cho webkit browsers */
+    #messages-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    #messages-container::-webkit-scrollbar-track {
+        background: #f7fafc;
+        border-radius: 4px;
+    }
+    
+    #messages-container::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 4px;
+    }
+    
+    #messages-container::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+    }
+
+    /* Message input improvements */
+    .message-input-area {
+        padding: 20px 30px;
+        min-height: 80px;
+        gap: 15px;
+    }
+    
+    #message-input {
+        min-height: 52px;
+        padding: 16px 20px;
+        font-size: 1rem;
+        /* Tối ưu cho input dài */
+        max-width: none;
+    }
+    
+    #send-btn {
+        width: 52px;
+        height: 52px;
+        font-size: 1.2rem;
+        /* Hover effect cho desktop */
+        transition: all 0.2s ease;
+    }
+    
+    #send-btn:hover:not(:disabled) {
+        background-color: #0056b3;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+    
+    #attach-btn {
+        min-width: 52px;
+        height: 52px;
+        font-size: 1.2rem;
+        /* Hover effect cho desktop */
+        transition: all 0.2s ease;
+    }
+    
+    #attach-btn:hover:not(:disabled) {
+        background-color: #f8f9fa;
+        color: var(--accent-color);
+        transform: scale(1.05);
+    }
+    
+    /* Empty state improvements */
+    .chat-empty-state {
+        padding: 80px 40px;
+    }
+    
+    .chat-empty-state i {
+        font-size: 5rem;
+        margin-bottom: 30px;
+    }
+    
+    .chat-empty-state h3 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+    
+    .chat-empty-state p {
+        font-size: 1rem;
+        line-height: 1.6;
     }
     
     /* Header improvements for desktop */
@@ -703,40 +959,152 @@ body {
 
 /* Mobile responsive improvements */
 @media (max-width: 767px) {
+    /* Chat panel improvements */
+    #chat-panel {
+        /* Đảm bảo chat panel chiếm toàn bộ màn hình khi active */
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 100;
+        /* Animation mượt mà */
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    /* Ẩn chat panel ban đầu trên mobile */
+    .admin-container:not(.show-chat) #chat-panel {
+        transform: translateX(100%);
+    }
+    
+    /* Hiển thị chat panel khi active */
+    .admin-container.show-chat #chat-panel {
+        transform: translateX(0);
+    }
+    
+    /* Chat header improvements */
+    #chat-panel-header {
+        padding: 12px 15px;
+        /* Đảm bảo header luôn hiển thị */
+        position: sticky;
+        top: 0;
+        background-color: var(--panel-bg);
+        /* Tối ưu cho mobile */
+        min-height: 56px;
+        /* Đảm bảo back button dễ nhấn */
+        gap: 12px;
+    }
+    
+    #back-to-users-btn {
+        /* Tăng kích thước button để dễ nhấn */
+        min-width: 44px;
+        height: 44px;
+        font-size: 1.4rem;
+        /* Đảm bảo button có đủ contrast */
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+    }
+    
+    #current-chat-user {
+        /* Đảm bảo text không bị cắt */
+        font-size: 1rem;
+        font-weight: 600;
+        /* Giới hạn chiều rộng để không bị overflow */
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    /* Messages container improvements */
+    #messages-container {
+        padding: 15px;
+        /* Đảm bảo scroll mượt mà trên mobile */
+        -webkit-overflow-scrolling: touch;
+        /* Tối ưu hiệu suất */
+        will-change: scroll-position;
+    }
+    
+    /* Message improvements */
     .message {
         max-width: 85%;
+        /* Đảm bảo tin nhắn không bị cắt */
+        margin-bottom: 16px;
     }
     
     .message-content {
         max-width: 90%;
-        padding: 8px 12px;
-        font-size: 0.85rem;
-        line-height: 1.3;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        line-height: 1.4;
         /* Xử lý tin nhắn dài trên mobile */
-        word-break: break-all;
+        word-break: break-word;
         overflow-wrap: break-word;
+        hyphens: auto;
+        /* Đảm bảo tin nhắn có đủ padding */
+        min-height: 44px;
+        display: flex;
+        align-items: center;
     }
     
     .message.admin .message-content {
         max-width: 85%;
-        min-width: 50px;
+        min-width: 60px;
     }
     
     .message.user .message-content {
         max-width: 85%;
-        min-width: 50px;
+        min-width: 60px;
     }
     
-    #messages-container {
-        padding: 15px;
-    }
-    
+    /* Message input area improvements */
     .message-input-area {
         padding: 12px 15px;
+        /* Đảm bảo input area luôn ở dưới cùng */
+        position: sticky;
+        bottom: 0;
+        background-color: var(--panel-bg);
+        /* Tối ưu cho mobile */
+        min-height: 64px;
+        /* Đảm bảo không bị che khuất bởi keyboard */
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
     
+    #message-input {
+        /* Tăng kích thước input để dễ nhập */
+        min-height: 44px;
+        font-size: 16px; /* Tránh zoom trên iOS */
+        padding: 12px 16px;
+        /* Đảm bảo input có đủ contrast */
+        background-color: #ffffff;
+        border: 1px solid #d1d5db;
+    }
+    
+    #send-btn {
+        /* Tăng kích thước button để dễ nhấn */
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+        /* Đảm bảo button có đủ contrast */
+        background-color: var(--accent-color);
+        border-radius: 50%;
+    }
+    
+    #attach-btn {
+        /* Tăng kích thước button để dễ nhấn */
+        min-width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+        /* Đảm bảo button có đủ contrast */
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+    }
+    
+    /* User list improvements */
     #user-list li {
         padding: 12px 15px;
+        /* Tăng kích thước touch target */
+        min-height: 60px;
     }
     
     #user-list-panel h2 {
@@ -744,11 +1112,7 @@ body {
         font-size: 1.1rem;
     }
     
-    #chat-panel-header {
-        padding: 12px 15px;
-    }
-    
-    /* Mobile header improvements */
+    /* Navbar improvements */
     .navbar {
         padding: 0 1rem;
     }
@@ -764,10 +1128,36 @@ body {
     .navbar-nav .nav-link {
         padding: 0.75rem 1rem;
         font-size: 0.95rem;
+        /* Tăng kích thước touch target */
+        min-height: 44px;
     }
     
     .nav-text {
         font-size: 0.9rem;
+    }
+    
+    /* Empty state improvements */
+    .chat-empty-state {
+        padding: 60px 20px;
+        text-align: center;
+    }
+    
+    .chat-empty-state i {
+        font-size: 4rem;
+        margin-bottom: 24px;
+        opacity: 0.3;
+    }
+    
+    .chat-empty-state h3 {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+        color: #495057;
+    }
+    
+    .chat-empty-state p {
+        font-size: 0.9rem;
+        color: #6c757d;
+        line-height: 1.5;
     }
 }
 
@@ -957,6 +1347,7 @@ body {
 }
 
 @media (max-width: 480px) {
+    /* Broadcast improvements */
     .broadcast-container {
         padding: 10px;
     }
@@ -975,22 +1366,101 @@ body {
         margin-right: 0;
     }
     
+    /* Chat panel improvements for extra small screens */
+    #chat-panel-header {
+        padding: 10px 12px;
+        min-height: 52px;
+        gap: 10px;
+    }
+    
+    #back-to-users-btn {
+        min-width: 40px;
+        height: 40px;
+        font-size: 1.3rem;
+    }
+    
+    #current-chat-user {
+        font-size: 0.95rem;
+        max-width: 150px;
+    }
+    
+    #connection-status {
+        font-size: 0.75rem;
+        padding: 3px 6px;
+    }
+    
+    /* Messages improvements */
+    #messages-container {
+        padding: 12px;
+    }
+    
+    .message {
+        max-width: 90%;
+        margin-bottom: 12px;
+    }
+    
     /* Xử lý tin nhắn dài trên màn hình rất nhỏ */
     .message-content {
         max-width: 95%;
-        padding: 6px 10px;
-        font-size: 0.8rem;
-        line-height: 1.2;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        line-height: 1.3;
+        min-height: 40px;
     }
     
     .message.admin .message-content {
         max-width: 90%;
-        min-width: 40px;
+        min-width: 50px;
     }
     
     .message.user .message-content {
         max-width: 90%;
+        min-width: 50px;
+    }
+    
+    /* Message input improvements */
+    .message-input-area {
+        padding: 10px 12px;
+        min-height: 56px;
+        gap: 8px;
+    }
+    
+    #message-input {
+        min-height: 40px;
+        padding: 10px 14px;
+        font-size: 16px; /* Tránh zoom trên iOS */
+    }
+    
+    #send-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+    
+    #attach-btn {
         min-width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+    
+    /* Empty state improvements */
+    .chat-empty-state {
+        padding: 40px 15px;
+    }
+    
+    .chat-empty-state i {
+        font-size: 3rem;
+        margin-bottom: 20px;
+    }
+    
+    .chat-empty-state h3 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+    
+    .chat-empty-state p {
+        font-size: 0.85rem;
+        line-height: 1.4;
     }
 }
 
@@ -1010,5 +1480,83 @@ body {
     .message.user .message-content {
         max-width: 80%;
         min-width: 60px;
+    }
+}
+
+/* Landscape orientation improvements for mobile */
+@media (max-width: 767px) and (orientation: landscape) {
+    /* Tối ưu cho màn hình landscape trên mobile */
+    #chat-panel-header {
+        min-height: 48px;
+        padding: 8px 15px;
+    }
+    
+    .message-input-area {
+        min-height: 56px;
+        padding: 10px 15px;
+    }
+    
+    #messages-container {
+        padding: 12px 15px;
+    }
+    
+    .message {
+        margin-bottom: 12px;
+    }
+    
+    .message-content {
+        padding: 8px 12px;
+        min-height: 36px;
+    }
+    
+    /* Giảm kích thước empty state */
+    .chat-empty-state {
+        padding: 30px 20px;
+    }
+    
+    .chat-empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+    }
+    
+    .chat-empty-state h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+    
+    .chat-empty-state p {
+        font-size: 0.8rem;
+    }
+}
+
+/* High DPI display improvements */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    /* Tối ưu cho màn hình retina */
+    .message-content {
+        border-width: 0.5px;
+    }
+    
+    #message-input {
+        border-width: 0.5px;
+    }
+    
+    .message-input-area {
+        border-top-width: 0.5px;
+    }
+    
+    #chat-panel-header {
+        border-bottom-width: 0.5px;
+    }
+}
+
+/* Print styles */
+@media print {
+    #chat-panel {
+        display: none;
+    }
+    
+    #user-list-panel {
+        width: 100%;
+        border-right: none;
     }
 }
