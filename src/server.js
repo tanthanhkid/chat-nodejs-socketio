@@ -11,6 +11,7 @@ const cors = require('cors');
 const { testConnection } = require('./config/database');
 const { initializeDatabase, getAllChannelsWithLastMessage } = require('./services/dbService');
 const initializeSocket = require('./services/socketService');
+const employeeService = require('./services/employeeService');
 
 // Khởi tạo
 const app = express();
@@ -210,6 +211,52 @@ app.get('/api/broadcast/history', async (req, res) => {
     } catch (error) {
         console.error('Error getting broadcast history:', error);
         res.status(500).json({ error: 'Failed to get broadcast history' });
+    }
+});
+
+// Employee API endpoints
+app.get('/api/employees', async (req, res) => {
+    try {
+        const employees = await employeeService.getEmployeesWithCache();
+        res.json(employees);
+    } catch (error) {
+        console.error('Error getting employees:', error);
+        res.status(500).json({ error: 'Failed to get employees' });
+    }
+});
+
+app.get('/api/employees/search', async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q) {
+            return res.json([]);
+        }
+        
+        const employees = await employeeService.searchEmployees(q);
+        res.json(employees);
+    } catch (error) {
+        console.error('Error searching employees:', error);
+        res.status(500).json({ error: 'Failed to search employees' });
+    }
+});
+
+// Channel management endpoints
+app.post('/api/channels', async (req, res) => {
+    try {
+        const { channelId, userEmail } = req.body;
+        
+        if (!channelId || !userEmail) {
+            return res.status(400).json({ error: 'Missing channelId or userEmail' });
+        }
+        
+        // Import dbService để tạo channel
+        const { getOrCreateChannel } = require('./services/dbService');
+        const channel = await getOrCreateChannel(userEmail);
+        
+        res.json(channel);
+    } catch (error) {
+        console.error('Error creating channel:', error);
+        res.status(500).json({ error: 'Failed to create channel' });
     }
 });
 

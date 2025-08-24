@@ -556,4 +556,195 @@ $(document).ready(function() {
             $(this).remove();
         });
     }
+
+    // ===== EMPLOYEE SEARCH FUNCTIONALITY =====
+    
+    // Cache dữ liệu nhân viên
+    let employeesCache = [];
+    let searchTimeout = null;
+
+    // Khởi tạo employee search
+    initializeEmployeeSearch();
+
+    function initializeEmployeeSearch() {
+        // Load danh sách nhân viên khi trang load
+        loadEmployees();
+        
+        // Setup event listeners cho search
+        setupEmployeeSearchEvents();
+    }
+
+    function loadEmployees() {
+        $.ajax({
+            url: `${SERVER_URL}/api/employees`,
+            method: 'GET',
+            success: function(employees) {
+                employeesCache = employees;
+                console.log('Loaded employees:', employees.length);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading employees:', error);
+                showToast('Lỗi', 'Không thể tải danh sách nhân viên', 'error');
+            }
+        });
+    }
+
+    function setupEmployeeSearchEvents() {
+        const searchInput = $('#employee-search-input');
+        const searchResults = $('#employee-search-results');
+
+        // Search input event
+        searchInput.on('input', function() {
+            const query = $(this).val().trim();
+            
+            // Clear previous timeout
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+            
+            // Debounce search
+            searchTimeout = setTimeout(() => {
+                if (query.length === 0) {
+                    hideSearchResults();
+                    return;
+                }
+                
+                searchEmployees(query);
+            }, 300);
+        });
+
+        // Hide results when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.search-box').length) {
+                hideSearchResults();
+            }
+        });
+
+        // Handle employee selection
+        $(document).on('click', '.employee-result-item', function() {
+            const employee = $(this).data('employee');
+            selectEmployee(employee);
+            hideSearchResults();
+            searchInput.val('');
+        });
+    }
+
+    function searchEmployees(query) {
+        if (!query || query.trim() === '') {
+            hideSearchResults();
+            return;
+        }
+
+        // Search trong cache trước
+        const results = employeesCache.filter(employee => {
+            const searchTerm = query.toLowerCase();
+            const fullName = (employee.fullName || '').toLowerCase();
+            const username = (employee.username || '').toLowerCase();
+            const employeeCode = (employee.employeeCode || '').toLowerCase();
+            
+            return fullName.includes(searchTerm) || 
+                   username.includes(searchTerm) || 
+                   employeeCode.includes(searchTerm);
+        });
+
+        displaySearchResults(results);
+    }
+
+    function displaySearchResults(employees) {
+        const searchResults = $('#employee-search-results');
+        
+        if (!employees || employees.length === 0) {
+            searchResults.html(`
+                <div class="employee-result-item">
+                    <div class="employee-info">
+                        <div class="employee-name">Không tìm thấy nhân viên</div>
+                    </div>
+                </div>
+            `);
+        } else {
+            let html = '';
+            employees.forEach(employee => {
+                const avatarText = getInitials(employee.fullName);
+                html += `
+                    <div class="employee-result-item" data-employee='${JSON.stringify(employee)}'>
+                        <div class="employee-avatar">${avatarText}</div>
+                        <div class="employee-info">
+                            <div class="employee-name">${escapeHtml(employee.fullName)}</div>
+                            <div class="employee-details">
+                                <span class="employee-username">@${escapeHtml(employee.username)}</span>
+                                <span class="employee-code">${escapeHtml(employee.employeeCode)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            searchResults.html(html);
+        }
+        
+        searchResults.addClass('show');
+    }
+
+    function hideSearchResults() {
+        $('#employee-search-results').removeClass('show');
+    }
+
+    function selectEmployee(employee) {
+        console.log('Selected employee:', employee);
+        
+        // Tạo channel với username của nhân viên
+        const channelId = employee.username;
+        const userEmail = employee.username; // Sử dụng username làm email
+        
+        // Kiểm tra xem channel đã tồn tại chưa
+        const existingChannel = $(`#user-list li[data-channel-id="${channelId}"]`);
+        
+        if (existingChannel.length > 0) {
+            // Channel đã tồn tại, chọn nó
+            selectChannel(channelId, userEmail);
+            showToast('Thành công', `Đã chuyển đến chat với ${employee.fullName}`, 'success');
+        } else {
+            // Tạo channel mới
+            createChannelWithEmployee(employee);
+        }
+    }
+
+    function createChannelWithEmployee(employee) {
+        const channelId = employee.username;
+        const userEmail = employee.username;
+        
+        // Gửi request tạo channel
+        $.ajax({
+            url: `${SERVER_URL}/api/channels`,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                channelId: channelId,
+                userEmail: userEmail
+            }),
+            success: function(response) {
+                console.log('Channel created:', response);
+                
+                // Chọn channel mới tạo
+                selectChannel(channelId, userEmail);
+                
+                // Refresh danh sách channels
+                refreshChannels();
+                
+                showToast('Thành công', `Đã bắt đầu chat với ${employee.fullName}`, 'success');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error creating channel:', error);
+                showToast('Lỗi', 'Không thể tạo cuộc trò chuyện', 'error');
+            }
+        });
+    }
+
+    function getInitials(name) {
+        if (!name) return '?';
+        return name.split(' ')
+                  .map(word => word.charAt(0))
+                  .join('')
+                  .toUpperCase()
+                  .substring(0, 2);
+    }
 });

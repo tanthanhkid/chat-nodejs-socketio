@@ -22,6 +22,121 @@ body {
      
 }
 
+/* --- Employee Search Styles --- */
+.employee-search-container {
+    margin-bottom: 1rem;
+    padding: 0 1rem;
+}
+
+.search-box {
+    position: relative;
+    width: 100%;
+}
+
+#employee-search-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background-color: var(--panel-bg);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#employee-search-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+#employee-search-input::placeholder {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: none;
+}
+
+.search-results.show {
+    display: block;
+}
+
+.employee-result-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.employee-result-item:hover {
+    background-color: #f8f9fa;
+}
+
+.employee-result-item:last-child {
+    border-bottom: none;
+}
+
+.employee-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-color), #0056b3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.employee-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.employee-name {
+    font-weight: 600;
+    color: var(--primary-text);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.employee-details {
+    font-size: 0.8rem;
+    color: #6c757d;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.employee-username {
+    font-weight: 500;
+    color: var(--accent-color);
+}
+
+.employee-code {
+    color: #6c757d;
+}
+
 /* --- Header Navigation Styles --- */
 .navbar {
     height: var(--navbar-height);

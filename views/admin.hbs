@@ -3,6 +3,14 @@
     <div id="user-list-panel">
         <h2>💬 Chat Dashboard</h2>
         
+        <!-- Employee Search Box -->
+        <div class="employee-search-container">
+            <div class="search-box">
+                <input type="text" id="employee-search-input" placeholder="🔍 Tìm kiếm nhân viên..." autocomplete="off">
+                <div class="search-results" id="employee-search-results"></div>
+            </div>
+        </div>
+        
         <ul id="user-list">
             {{#if channels}}
                 {{#each channels}}
