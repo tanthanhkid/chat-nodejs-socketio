@@ -88,6 +88,7 @@ app.get('/', (req, res) => {
     res.send(`
         <h1>Chat System Running!</h1>
         <p><a href="/admin">Trang Admin</a></p>
+        <p><a href="/broadcast">Broadcast Messages</a></p>
         <p><a href="/example">Example Widget</a></p>
     `);
 });
@@ -126,6 +127,81 @@ app.post('/upload', (req, res) => {
             filename: req.file.filename
         });
     });
+});
+
+// Broadcast routes
+const BroadcastService = require('./services/broadcastService');
+
+app.get('/broadcast', async (req, res) => {
+    try {
+        res.render('broadcast', { 
+            layout: 'main', 
+            title: 'Broadcast Messages'
+        });
+    } catch (error) {
+        console.error('Error rendering broadcast page:', error);
+        res.status(500).send('Error loading broadcast page');
+    }
+});
+
+// API endpoints
+app.get('/api/departments', async (req, res) => {
+    try {
+        const departments = await BroadcastService.getDepartments();
+        res.json(departments);
+    } catch (error) {
+        console.error('Error getting departments:', error);
+        res.status(500).json({ error: 'Failed to get departments' });
+    }
+});
+
+app.get('/api/employees', async (req, res) => {
+    try {
+        const departmentId = req.query.departmentId ? parseInt(req.query.departmentId) : null;
+        const employees = await BroadcastService.getEmployees(departmentId);
+        res.json(employees);
+    } catch (error) {
+        console.error('Error getting employees:', error);
+        res.status(500).json({ error: 'Failed to get employees' });
+    }
+});
+
+app.post('/api/broadcast/send', async (req, res) => {
+    try {
+        const { content, type, targetType, targetDepartmentId } = req.body;
+        
+        // Validate input
+        if (!content || !type || !targetType) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        if (targetType === 'department' && !targetDepartmentId) {
+            return res.status(400).json({ error: 'Department ID required for department target' });
+        }
+        
+        // Send broadcast
+        const result = await BroadcastService.sendBroadcastMessage({
+            content,
+            type,
+            targetType,
+            targetDepartmentId
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error sending broadcast:', error);
+        res.status(500).json({ error: 'Failed to send broadcast' });
+    }
+});
+
+app.get('/api/broadcast/history', async (req, res) => {
+    try {
+        const broadcasts = await BroadcastService.getBroadcastHistory();
+        res.json(broadcasts);
+    } catch (error) {
+        console.error('Error getting broadcast history:', error);
+        res.status(500).json({ error: 'Failed to get broadcast history' });
+    }
 });
 
 // Example page để test widget

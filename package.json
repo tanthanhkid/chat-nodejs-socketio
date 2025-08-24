@@ -11,18 +11,26 @@
     "db:logs": "cd database && docker compose logs -f postgres"
   },
   "dependencies": {
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "socket.io": "^4.7.2",
     "express-handlebars": "^7.1.2",
     "multer": "^1.4.5-lts.1",
-    "cors": "^2.8.5",
     "pg": "^8.11.3",
-    "dotenv": "^16.3.1"
+    "socket.io": "^4.7.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["chat", "socket.io", "nodejs", "express", "real-time", "postgresql"],
+  "keywords": [
+    "chat",
+    "socket.io",
+    "nodejs",
+    "express",
+    "real-time",
+    "postgresql"
+  ],
   "author": "ThanhTT88",
   "license": "MIT"
 }

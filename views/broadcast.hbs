@@ -1,0 +1,95 @@
+<div class="broadcast-container">
+    <div class="broadcast-header">
+        <h2>📢 Gửi Tin nhắn Broadcast</h2>
+        <div class="broadcast-stats">
+            <span class="stat-item">
+                <i class="fas fa-users"></i>
+                <span id="total-employees">0</span> nhân viên
+            </span>
+            <span class="stat-item">
+                <i class="fas fa-building"></i>
+                <span id="total-departments">0</span> phòng ban
+            </span>
+        </div>
+    </div>
+
+    <div class="broadcast-form">
+        <div class="form-group">
+            <label for="target-type">Đối tượng nhận:</label>
+            <select id="target-type" class="form-control">
+                <option value="all_employees">Tất cả nhân viên</option>
+                <option value="department">Phòng ban cụ thể</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="department-select-group" style="display: none;">
+            <label for="department-select">Chọn phòng ban:</label>
+            <select id="department-select" class="form-control">
+                <option value="">-- Chọn phòng ban --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="message-type">Loại tin nhắn:</label>
+            <select id="message-type" class="form-control">
+                <option value="text">Văn bản</option>
+                <option value="image">Hình ảnh</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="text-content-group">
+            <label for="message-content">Nội dung tin nhắn:</label>
+            <textarea id="message-content" class="form-control" rows="4" placeholder="Nhập nội dung tin nhắn..."></textarea>
+        </div>
+
+        <div class="form-group" id="image-content-group" style="display: none;">
+            <label for="image-upload">Chọn hình ảnh:</label>
+            <input type="file" id="image-upload" class="form-control" accept="image/*">
+            <div id="image-preview" class="mt-2"></div>
+        </div>
+
+        <div class="form-group">
+            <button id="send-broadcast-btn" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i>
+                Gửi Tin nhắn
+            </button>
+            <button id="preview-btn" class="btn btn-secondary">
+                <i class="fas fa-eye"></i>
+                Xem trước
+            </button>
+        </div>
+    </div>
+
+    <div class="broadcast-history">
+        <h3>📋 Lịch sử Broadcast</h3>
+        <div id="broadcast-list">
+            <!-- Danh sách broadcast messages -->
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xem trước tin nhắn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="preview-info">
+                    <p><strong>Đối tượng:</strong> <span id="preview-target"></span></p>
+                    <p><strong>Số lượng nhận:</strong> <span id="preview-count"></span> nhân viên</p>
+                </div>
+                <div class="preview-message">
+                    <h6>Nội dung tin nhắn:</h6>
+                    <div id="preview-content"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="confirm-send-btn">Xác nhận gửi</button>
+            </div>
+        </div>
+    </div>
+</div>
