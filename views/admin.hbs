@@ -26,6 +26,16 @@
                     {{else}}
                     <div class="last-message">Chưa có tin nhắn</div>
                     {{/if}}
+                    {{#if unreadCount}}
+                    <div class="unread-indicator" data-unread-count="{{unreadCount}}">
+                        <span class="unread-dot"></span>
+                        {{#if (gt unreadCount 9)}}
+                            <span class="unread-count">9+</span>
+                        {{else}}
+                            <span class="unread-count">{{unreadCount}}</span>
+                        {{/if}}
+                    </div>
+                    {{/if}}
                 </li>
                 {{/each}}
             {{else}}

@@ -110,6 +110,14 @@ async function getAllChannelsWithLastMessage() {
           timestamp
         FROM messages 
         ORDER BY channel_id, timestamp DESC
+      ),
+      unread_counts AS (
+        SELECT 
+          channel_id,
+          COUNT(*) as unread_count
+        FROM messages 
+        WHERE sender = 'user' AND admin_read_at IS NULL
+        GROUP BY channel_id
       )
       SELECT 
         c.id,
@@ -117,6 +125,7 @@ async function getAllChannelsWithLastMessage() {
         c.user_email, 
         c.created_at,
         COUNT(m.id) as message_count,
+        COALESCE(uc.unread_count, 0) as unread_count,
         CASE 
           WHEN lm.message_id IS NOT NULL THEN 
             json_build_object(
@@ -131,7 +140,8 @@ async function getAllChannelsWithLastMessage() {
       FROM channels c
       LEFT JOIN messages m ON c.channel_id = m.channel_id
       LEFT JOIN last_messages lm ON c.channel_id = lm.channel_id
-      GROUP BY c.id, c.channel_id, c.user_email, c.created_at, lm.message_id, lm.sender, lm.type, lm.content, lm.timestamp
+      LEFT JOIN unread_counts uc ON c.channel_id = uc.channel_id
+      GROUP BY c.id, c.channel_id, c.user_email, c.created_at, lm.message_id, lm.sender, lm.type, lm.content, lm.timestamp, uc.unread_count
       ORDER BY lm.timestamp DESC NULLS LAST, c.created_at DESC
     `);
     
@@ -142,12 +152,37 @@ async function getAllChannelsWithLastMessage() {
       userEmail: row.user_email,
       createdAt: row.created_at,
       messageCount: row.message_count,
+      unreadCount: parseInt(row.unread_count) || 0,
       lastMessage: row.last_message
     }));
     
     return channels;
   } catch (error) {
     console.error('Error getting channels with last message:', error.message);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Đếm số tin nhắn chưa đọc của admin cho một channel
+ * @param {string} channelId - ID của kênh
+ * @returns {number} Số tin nhắn chưa đọc
+ */
+async function getUnreadCountForAdmin(channelId) {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      `SELECT COUNT(*) as unread_count
+       FROM messages 
+       WHERE channel_id = $1 AND sender = 'user' AND admin_read_at IS NULL`,
+      [channelId]
+    );
+    
+    return parseInt(result.rows[0].unread_count) || 0;
+  } catch (error) {
+    console.error('Error getting unread count:', error.message);
     throw error;
   } finally {
     client.release();
@@ -325,5 +360,6 @@ module.exports = {
   addMessage,
   markMessagesRead,
   getSystemStats,
-  deleteOldMessages
+  deleteOldMessages,
+  getUnreadCountForAdmin
 };

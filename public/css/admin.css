@@ -19,7 +19,7 @@ body {
     background-color: var(--primary-bg);
     color: var(--primary-text);
     overflow: hidden; /* Ngăn cuộn toàn bộ trang */
-    padding-top: var(--navbar-height); /* Thêm padding cho navbar fixed */
+     
 }
 
 /* --- Header Navigation Styles --- */
@@ -161,6 +161,7 @@ body {
     flex-shrink: 0;
 }
 
+/* --- User List Styles --- */
 #user-list {
     list-style: none;
     padding: 0;
@@ -171,11 +172,13 @@ body {
 
 #user-list li {
     padding: 15px 20px;
-    cursor: pointer;
     border-bottom: 1px solid var(--border-color);
-    transition: background-color 0.2s;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
     display: flex;
-    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
 }
 
 #user-list li:hover {
@@ -185,17 +188,30 @@ body {
 #user-list li.active {
     background-color: var(--accent-color);
     color: white;
-    font-weight: bold;
 }
 
-#user-list li.active .text-muted {
-    color: rgba(255, 255, 255, 0.8) !important;
+#user-list li.active .user-email {
+    color: white;
+}
+
+#user-list li.active .last-message {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+#user-list li.active .message-time {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.channel-info {
+    flex-grow: 1;
+    min-width: 0;
+    margin-right: 10px;
 }
 
 .user-email {
     font-weight: 600;
-    font-size: 1rem;
     margin-bottom: 4px;
+    color: var(--primary-text);
 }
 
 .last-message {
@@ -208,6 +224,63 @@ body {
 .message-time {
     font-size: 0.8rem;
     color: #adb5bd;
+}
+
+/* --- Unread Indicator Styles --- */
+.unread-indicator {
+    position: relative;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+.unread-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.unread-count {
+    background-color: #dc3545;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 16px;
+    text-align: center;
+    line-height: 1;
+}
+
+/* Active state for unread indicator */
+#user-list li.active .unread-indicator {
+    display: none;
+}
+
+/* Animation for new unread messages */
+@keyframes unreadPulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.unread-indicator.new {
+    animation: unreadPulse 0.6s ease-in-out;
 }
 
 /* --- Chat Panel Header --- */

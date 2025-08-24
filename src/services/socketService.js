@@ -1,5 +1,5 @@
 // src/services/socketService.js
-const { getOrCreateChannel, getMessages, addMessage, getAllChannelsWithLastMessage, markMessagesRead } = require('./dbService');
+const { getOrCreateChannel, getMessages, addMessage, getAllChannelsWithLastMessage, markMessagesRead, getUnreadCountForAdmin } = require('./dbService');
 const BroadcastService = require('./broadcastService');
 
 function initializeSocket(io) {
@@ -53,8 +53,12 @@ function initializeSocket(io) {
                 // Gửi lại cho user với ID tin nhắn
                 socket.emit('chat:messageSent', savedMessage);
 
-                // Gửi cho admin
-                adminNamespace.emit('admin:newMessage', savedMessage);
+                // Gửi cho admin với thông tin unread count
+                const unreadCount = await getUnreadCountForAdmin(socket.userEmail);
+                adminNamespace.emit('admin:newMessage', {
+                    ...savedMessage,
+                    unreadCount
+                });
 
                 console.log(`Message from ${socket.userEmail}:`, savedMessage);
             } catch (error) {
@@ -114,14 +118,20 @@ function initializeSocket(io) {
             try {
                 if (!channelId || !Array.isArray(messageIds)) return;
                 await markMessagesRead(channelId, 'admin', messageIds);
+                
+                // Cập nhật unread count sau khi đọc
+                const unreadCount = await getUnreadCountForAdmin(channelId);
+                
                 io.to(channelId).emit('chat:read', {
                     reader: 'admin',
                     messageIds
                 });
+                
                 adminNamespace.emit('chat:read', {
                     channelId,
                     reader: 'admin',
-                    messageIds
+                    messageIds,
+                    unreadCount
                 });
             } catch (error) {
                 console.error('Error marking messages read (admin):', error);

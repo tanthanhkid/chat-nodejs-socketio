@@ -60,6 +60,9 @@ $(document).ready(function() {
             } else {
                 // Show notification for other channels
                 showToast('Tin nhắn mới', `Từ ${message.channelId}: ${getMessagePreview(message)}`, 'info');
+                
+                // Update unread count for the specific channel
+                updateUnreadCount(message.channelId, message.unreadCount);
             }
         });
 
@@ -69,9 +72,14 @@ $(document).ready(function() {
             refreshChannels();
         });
 
-        socket.on('chat:read', ({ channelId, messageIds, reader }) => {
+        socket.on('chat:read', ({ channelId, messageIds, reader, unreadCount }) => {
             if (reader === 'user' && channelId === currentChannelId) {
                 markMessagesRead(messageIds);
+            }
+            
+            // Update unread count if provided
+            if (unreadCount !== undefined) {
+                updateUnreadCount(channelId, unreadCount);
             }
         });
 
@@ -168,17 +176,58 @@ $(document).ready(function() {
             const isActive = channel.channelId === currentChannelId ? 'active' : '';
             const lastMessagePreview = getLastMessagePreview(channel.lastMessage);
             const lastMessageTime = channel.lastMessage ? formatDate(channel.lastMessage.timestamp) : '';
+            const unreadIndicator = channel.unreadCount > 0 ? `
+                <div class="unread-indicator" data-unread-count="${channel.unreadCount}">
+                    <span class="unread-dot"></span>
+                    <span class="unread-count">${channel.unreadCount > 9 ? '9+' : channel.unreadCount}</span>
+                </div>
+            ` : '';
             
             html += `
                 <li data-channel-id="${channel.channelId}" data-user-email="${escapeHtml(channel.userEmail)}" class="${isActive}">
-                    <div class="user-email">${escapeHtml(channel.userEmail)}</div>
-                    <div class="last-message">${lastMessagePreview}</div>
-                    ${lastMessageTime ? `<div class="message-time">${lastMessageTime}</div>` : ''}
+                    <div class="channel-info">
+                        <div class="user-email">${escapeHtml(channel.userEmail)}</div>
+                        <div class="last-message">${lastMessagePreview}</div>
+                        ${lastMessageTime ? `<div class="message-time">${lastMessageTime}</div>` : ''}
+                    </div>
+                    ${unreadIndicator}
                 </li>
             `;
         });
         
         userList.html(html);
+    }
+
+    function updateUnreadCount(channelId, unreadCount) {
+        const channelElement = $(`#user-list li[data-channel-id="${channelId}"]`);
+        if (channelElement.length === 0) return;
+
+        const existingIndicator = channelElement.find('.unread-indicator');
+        
+        if (unreadCount > 0) {
+            const unreadCountText = unreadCount > 9 ? '9+' : unreadCount;
+            
+            if (existingIndicator.length > 0) {
+                // Update existing indicator
+                existingIndicator.attr('data-unread-count', unreadCount);
+                existingIndicator.find('.unread-count').text(unreadCountText);
+                existingIndicator.addClass('new');
+                setTimeout(() => existingIndicator.removeClass('new'), 600);
+            } else {
+                // Create new indicator
+                const newIndicator = $(`
+                    <div class="unread-indicator new" data-unread-count="${unreadCount}">
+                        <span class="unread-dot"></span>
+                        <span class="unread-count">${unreadCountText}</span>
+                    </div>
+                `);
+                channelElement.append(newIndicator);
+                setTimeout(() => newIndicator.removeClass('new'), 600);
+            }
+        } else {
+            // Remove indicator if no unread messages
+            existingIndicator.remove();
+        }
     }
 
     function selectChannel(channelId, userEmail) {
