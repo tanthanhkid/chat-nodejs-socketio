@@ -448,6 +448,27 @@ $(document).ready(function() {
     function scrollToBottom() {
         const chatContainer = $('#messages-container');
         chatContainer.scrollTop(chatContainer[0].scrollHeight);
+        
+        // Kiểm tra và scroll ngang nếu tin nhắn bị overflow
+        setTimeout(() => {
+            const messages = chatContainer.find('.message');
+            messages.each(function() {
+                const messageContent = $(this).find('.message-content');
+                if (messageContent.length > 0) {
+                    const contentWidth = messageContent[0].scrollWidth;
+                    const containerWidth = messageContent[0].clientWidth;
+                    
+                    if (contentWidth > containerWidth) {
+                        // Tin nhắn bị overflow, scroll để hiển thị đầy đủ
+                        messageContent[0].scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'nearest',
+                            inline: 'end'
+                        });
+                    }
+                }
+            });
+        }, 100);
     }
 
     function getLastMessagePreview(lastMessage) {
