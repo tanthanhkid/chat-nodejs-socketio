@@ -544,11 +544,7 @@
     }
 
     function formatTime(timestamp) {
-        const date = new Date(timestamp);
-        return date.toLocaleTimeString('vi-VN', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
+        return window.TimezoneUtils.formatTimeVietnam(timestamp);
     }
 
     function escapeHtml(text) {

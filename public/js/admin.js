@@ -471,21 +471,11 @@ $(document).ready(function() {
 
     function formatDate(dateString) {
         if (!dateString) return '';
-        const date = new Date(dateString);
-        return date.toLocaleString('vi-VN', { 
-            day: '2-digit',
-            month: '2-digit',
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
+        return window.TimezoneUtils.formatDateVietnam(dateString);
     }
 
     function formatTime(timestamp) {
-        const date = new Date(timestamp);
-        return date.toLocaleTimeString('vi-VN', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
+        return window.TimezoneUtils.formatTimeVietnam(timestamp);
     }
 
     function escapeHtml(text) {

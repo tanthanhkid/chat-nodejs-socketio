@@ -300,8 +300,7 @@ $(document).ready(function() {
     }
 
     function formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleString('vi-VN');
+        return window.TimezoneUtils.formatFullDateVietnam(dateString);
     }
 
     function escapeHtml(text) {

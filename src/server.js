@@ -30,7 +30,19 @@ app.engine('hbs', exphbs.engine({
         formatDate: function(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
-            return date.toLocaleString('vi-VN');
+            // Convert to Vietnam timezone (GMT+7)
+            const vietnamOffset = 7 * 60; // GMT+7 in minutes
+            const localOffset = date.getTimezoneOffset();
+            const offsetDiff = localOffset + vietnamOffset;
+            const vietnamTime = new Date(date.getTime() + (offsetDiff * 60 * 1000));
+            
+            return vietnamTime.toLocaleString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'Asia/Ho_Chi_Minh'
+            });
         },
         truncate: function(str, len) {
             if (!str) return '';
@@ -247,7 +259,9 @@ app.get('/example', (req, res) => {
     <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
     <!-- 3. Nhúng jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- 4. Nhúng thư viện chat widget -->
+    <!-- 4. Nhúng timezone utilities -->
+    <script src="/js/timezone-utils.js"></script>
+    <!-- 5. Nhúng thư viện chat widget -->
     <script src="/js/chat-widget.js"></script>
     <script>
         // Khởi tạo widget
