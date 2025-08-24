@@ -104,7 +104,7 @@
                                     <p>Vui lòng nhập email để bắt đầu trò chuyện với chúng tôi</p>
                                 </div>
                                 <div class="login-form">
-                                    <input type="email" id="email-input" placeholder="your@email.com" required />
+                                    <input type="text" id="email-input" placeholder="your@email.com" required />
                                     <button id="start-chat-btn">Bắt đầu chat</button>
                                 </div>
                             </div>

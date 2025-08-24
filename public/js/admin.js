@@ -320,12 +320,12 @@ $(document).ready(function() {
         // Remove empty state if exists
         chatContainer.find('.chat-empty-state').remove();
         
-        const messageClass = message.sender === 'admin' ? 'admin-message' : 'user-message';
+        const messageClass = message.sender === 'admin' ? 'admin' : 'user';
         const senderName = message.sender === 'admin' ? 'Admin' : currentChannelEmail;
         
         let messageContent = '';
         if (message.type === 'image') {
-            messageContent = `<img src="${message.content}" alt="Hình ảnh" class="chat-image">`;
+            messageContent = `<img src="${message.content}" alt="Hình ảnh" class="message-image">`;
         } else {
             messageContent = `<div class="message-content">${escapeHtml(message.content)}</div>`;
         }
