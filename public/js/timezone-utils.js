@@ -9,17 +9,9 @@
 function toVietnamTime(timestamp) {
     const date = new Date(timestamp);
     
-    // Get the timezone offset in minutes
-    const localOffset = date.getTimezoneOffset();
-    const vietnamOffset = -7 * 60; // GMT+7 = -420 minutes
-    
-    // Calculate the difference
-    const offsetDiff = localOffset - vietnamOffset;
-    
-    // Create new date with Vietnam timezone
-    const vietnamTime = new Date(date.getTime() + (offsetDiff * 60 * 1000));
-    
-    return vietnamTime;
+    // Since server is already in GMT+7, we just need to ensure proper formatting
+    // No conversion needed, just return the date as is
+    return date;
 }
 
 /**
@@ -31,8 +23,7 @@ function formatTimeVietnam(timestamp) {
     const vietnamDate = toVietnamTime(timestamp);
     return vietnamDate.toLocaleTimeString('vi-VN', { 
         hour: '2-digit', 
-        minute: '2-digit',
-        timeZone: 'Asia/Ho_Chi_Minh'
+        minute: '2-digit'
     });
 }
 
@@ -48,8 +39,7 @@ function formatDateVietnam(timestamp) {
         day: '2-digit',
         month: '2-digit',
         hour: '2-digit', 
-        minute: '2-digit',
-        timeZone: 'Asia/Ho_Chi_Minh'
+        minute: '2-digit'
     });
 }
 
@@ -61,9 +51,7 @@ function formatDateVietnam(timestamp) {
 function formatFullDateVietnam(timestamp) {
     if (!timestamp) return '';
     const vietnamDate = toVietnamTime(timestamp);
-    return vietnamDate.toLocaleString('vi-VN', {
-        timeZone: 'Asia/Ho_Chi_Minh'
-    });
+    return vietnamDate.toLocaleString('vi-VN');
 }
 
 // Export functions for use in other files

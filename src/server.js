@@ -30,18 +30,12 @@ app.engine('hbs', exphbs.engine({
         formatDate: function(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
-            // Convert to Vietnam timezone (GMT+7)
-            const vietnamOffset = 7 * 60; // GMT+7 in minutes
-            const localOffset = date.getTimezoneOffset();
-            const offsetDiff = localOffset + vietnamOffset;
-            const vietnamTime = new Date(date.getTime() + (offsetDiff * 60 * 1000));
-            
-            return vietnamTime.toLocaleString('vi-VN', {
+            // Server is already in GMT+7, just format properly
+            return date.toLocaleString('vi-VN', {
                 day: '2-digit',
                 month: '2-digit',
                 hour: '2-digit',
-                minute: '2-digit',
-                timeZone: 'Asia/Ho_Chi_Minh'
+                minute: '2-digit'
             });
         },
         truncate: function(str, len) {
