@@ -193,6 +193,15 @@
         $('#message-input').on('focus', function() {
             markUnreadMessagesAsRead();
         });
+
+        // Additional safety: mark all unread messages when widget becomes visible
+        $(document).on('click', '#chat-bubble', function() {
+            setTimeout(() => {
+                if (!$('#chat-window').hasClass('chat-hidden')) {
+                    markAllUnreadMessagesAsReadOnReconnect();
+                }
+            }, 100);
+        });
     }
 
     function toggleChatWindow() {
@@ -286,6 +295,13 @@
         socket.on('connect', () => {
             console.log('Connected to chat server');
             socket.emit('user:join', { email: userEmail });
+            
+            // Mark all unread messages as read when reconnecting
+            if (isWidgetClosed) {
+                setTimeout(() => {
+                    markAllUnreadMessagesAsReadOnReconnect();
+                }, 1000);
+            }
         });
 
         socket.on('chat:history', (messages) => {
@@ -298,12 +314,10 @@
             // Process any queued messages
             processMessageQueue();
             
-            // Mark unread messages as read after connection (if widget is open)
+            // Mark all unread messages as read after loading history
             setTimeout(() => {
-                if (!$('#chat-window').hasClass('chat-hidden')) {
-                    markUnreadMessagesAsRead();
-                }
-            }, 500);
+                markAllUnreadMessagesAsReadOnReconnect();
+            }, 300);
         });
 
         socket.on('chat:message', (message) => {
@@ -574,6 +588,30 @@
             
             console.log(`✅ Marked ${messageIds.length} messages as read on user interaction`);
         }
+    }
+
+    function markAllUnreadMessagesAsReadOnReconnect() {
+        const $ = window.jQuery;
+        
+        // Chỉ thực hiện nếu có socket và userEmail
+        if (!socket || !userEmail) {
+            console.log('⚠️ Cannot mark messages as read: socket or userEmail not available');
+            return;
+        }
+
+        // Emit chat:user_opened_widget để mark tất cả tin nhắn admin thành read
+        socket.emit('chat:user_opened_widget', { channelId: userEmail });
+        
+        // Update UI - mark tất cả tin nhắn admin thành read
+        $('.messages-container .message-admin .read-status').each(function() {
+            $(this).text('Đã xem').show();
+        });
+
+        // Reset unread count
+        unreadMessagesCount = 0;
+        $('#unread-count').hide().text('0');
+        
+        console.log(`✅ Marked all admin messages as read on reconnect`);
     }
 
     function markMessagesRead(messageIds) {
