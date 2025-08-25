@@ -183,6 +183,16 @@
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
         });
+
+        // Track user interaction with chat to mark messages as read
+        $(document).on('click', '#chat-window, #chat-body, .messages-container, #message-input', function() {
+            markUnreadMessagesAsRead();
+        });
+
+        // Track when user starts typing (indicates they're actively viewing)
+        $('#message-input').on('focus', function() {
+            markUnreadMessagesAsRead();
+        });
     }
 
     function toggleChatWindow() {
@@ -287,6 +297,13 @@
             
             // Process any queued messages
             processMessageQueue();
+            
+            // Mark unread messages as read after connection (if widget is open)
+            setTimeout(() => {
+                if (!$('#chat-window').hasClass('chat-hidden')) {
+                    markUnreadMessagesAsRead();
+                }
+            }, 500);
         });
 
         socket.on('chat:message', (message) => {
@@ -520,6 +537,43 @@
         $(`.messages-container .message-${sender} .read-status`).each(function() {
             $(this).text('Đã xem').show();
         });
+    }
+
+    function markUnreadMessagesAsRead() {
+        const $ = window.jQuery;
+        
+        // Chỉ thực hiện nếu widget đang mở và có tin nhắn chưa đọc
+        if ($('#chat-window').hasClass('chat-hidden') || !socket || !userEmail) {
+            return;
+        }
+
+        // Tìm tất cả tin nhắn admin chưa được mark read
+        const unreadMessages = $('.messages-container .message-admin').filter(function() {
+            return $(this).find('.read-status').is(':hidden');
+        });
+
+        if (unreadMessages.length > 0) {
+            const messageIds = unreadMessages.map(function() {
+                return $(this).data('id');
+            }).get();
+
+            // Emit read event
+            socket.emit('chat:read', { messageIds: messageIds });
+            
+            // Update UI
+            messageIds.forEach(id => {
+                const el = $(`.messages-container .message[data-id="${id}"] .read-status`);
+                if (el.length) {
+                    el.text('Đã xem').show();
+                }
+            });
+
+            // Reset unread count
+            unreadMessagesCount = 0;
+            $('#unread-count').hide().text('0');
+            
+            console.log(`✅ Marked ${messageIds.length} messages as read on user interaction`);
+        }
     }
 
     function markMessagesRead(messageIds) {
