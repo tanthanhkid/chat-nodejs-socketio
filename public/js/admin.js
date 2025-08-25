@@ -56,7 +56,7 @@ $(document).ready(function() {
             // If this message is for current channel, display it
             if (message.channelId === currentChannelId) {
                 appendMessage(message);
-                socket.emit('chat:read', { channelId: currentChannelId, messageIds: [message.messageId] });
+                // Bỏ auto-mark read khi nhận tin nhắn mới
             } else {
                 // Show notification for other channels
                 showToast('Tin nhắn mới', `Từ ${message.channelId}: ${getMessagePreview(message)}`, 'info');
@@ -75,6 +75,18 @@ $(document).ready(function() {
         socket.on('chat:read', ({ channelId, messageIds, reader, unreadCount }) => {
             if (reader === 'user' && channelId === currentChannelId) {
                 markMessagesRead(messageIds);
+            }
+            
+            // Update unread count if provided
+            if (unreadCount !== undefined) {
+                updateUnreadCount(channelId, unreadCount);
+            }
+        });
+
+        socket.on('chat:read_status_updated', ({ channelId, reader, timestamp, unreadCount }) => {
+            if (reader === 'user' && channelId === currentChannelId) {
+                // Update all admin messages to show as read
+                updateAllMessagesAsRead('admin');
             }
             
             // Update unread count if provided
@@ -263,6 +275,8 @@ $(document).ready(function() {
         // Request messages for this channel
         if (socket && socket.connected) {
             socket.emit('admin:getMessages', { channelId });
+            // Mark all user messages as read when opening conversation
+            socket.emit('chat:admin_opened_conversation', { channelId });
         }
     }
 
@@ -357,6 +371,12 @@ $(document).ready(function() {
             if (el.length) {
                 el.text('Đã xem').show();
             }
+        });
+    }
+
+    function updateAllMessagesAsRead(sender) {
+        $(`#messages-container .message.${sender} .read-status`).each(function() {
+            $(this).text('Đã xem').show();
         });
     }
 

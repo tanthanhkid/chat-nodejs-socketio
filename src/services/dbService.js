@@ -329,6 +329,83 @@ async function getSystemStats() {
 }
 
 /**
+ * Đánh dấu tất cả tin nhắn của admin là đã đọc bởi user
+ * @param {string} channelId - ID của kênh
+ * @param {string} userId - ID của user
+ * @returns {number} Số tin nhắn đã được đánh dấu
+ */
+async function markAllMessagesAsReadByUser(channelId, userId) {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      `UPDATE messages
+       SET user_read_at = NOW()
+       WHERE channel_id = $1 AND sender = 'admin' AND user_read_at IS NULL`,
+      [channelId]
+    );
+    
+    console.log(`✅ Marked ${result.rowCount} admin messages as read by user ${userId}`);
+    return result.rowCount;
+  } catch (error) {
+    console.error('Error marking messages read by user:', error.message);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Đánh dấu tất cả tin nhắn của user là đã đọc bởi admin
+ * @param {string} channelId - ID của kênh
+ * @param {string} adminId - ID của admin
+ * @returns {number} Số tin nhắn đã được đánh dấu
+ */
+async function markAllMessagesAsReadByAdmin(channelId, adminId) {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      `UPDATE messages
+       SET admin_read_at = NOW()
+       WHERE channel_id = $1 AND sender = 'user' AND admin_read_at IS NULL`,
+      [channelId]
+    );
+    
+    console.log(`✅ Marked ${result.rowCount} user messages as read by admin ${adminId}`);
+    return result.rowCount;
+  } catch (error) {
+    console.error('Error marking messages read by admin:', error.message);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Đếm số tin nhắn chưa đọc của user cho một channel
+ * @param {string} channelId - ID của kênh
+ * @param {string} userId - ID của user
+ * @returns {number} Số tin nhắn chưa đọc
+ */
+async function getUnreadCountForUser(channelId, userId) {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      `SELECT COUNT(*) as unread_count
+       FROM messages 
+       WHERE channel_id = $1 AND sender = 'admin' AND user_read_at IS NULL`,
+      [channelId]
+    );
+    
+    return parseInt(result.rows[0].unread_count) || 0;
+  } catch (error) {
+    console.error('Error getting unread count for user:', error.message);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
  * Xóa tin nhắn cũ (cleanup function)
  * @param {number} daysOld - Số ngày cũ
  * @returns {number} Số tin nhắn đã xóa
@@ -359,6 +436,9 @@ module.exports = {
   getMessages,
   addMessage,
   markMessagesRead,
+  markAllMessagesAsReadByUser,
+  markAllMessagesAsReadByAdmin,
+  getUnreadCountForUser,
   getSystemStats,
   deleteOldMessages,
   getUnreadCountForAdmin

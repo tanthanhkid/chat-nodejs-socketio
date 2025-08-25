@@ -199,6 +199,11 @@
         // Clear unread count
         $('#unread-count').hide().text('0');
         
+        // Emit event khi user mở widget
+        if (socket && userEmail) {
+            socket.emit('chat:user_opened_widget', { channelId: userEmail });
+        }
+        
         // If not connected and no email, show login
         if (!isConnected && !userEmail) {
             showLoginScreen();
@@ -306,6 +311,12 @@
             hideLoadingState();
             showAlert(error.message || 'Có lỗi xảy ra khi kết nối');
         });
+
+        socket.on('chat:read_status_updated', (data) => {
+            if (data.reader === 'admin') {
+                updateAllMessagesAsRead('user');
+            }
+        });
     }
 
     function showChatScreen() {
@@ -349,9 +360,7 @@
             }
         });
         scrollToBottom();
-        if (socket && adminIds.length) {
-            socket.emit('chat:read', { messageIds: adminIds });
-        }
+        // Bỏ auto-mark read khi load tin nhắn
     }
 
     function appendMessage(message, animate = true) {
@@ -491,6 +500,13 @@
         });
 
         messageQueue = [];
+    }
+
+    function updateAllMessagesAsRead(sender) {
+        const $ = window.jQuery;
+        $(`.messages-container .message-${sender} .read-status`).each(function() {
+            $(this).text('Đã xem').show();
+        });
     }
 
     function markMessagesRead(messageIds) {

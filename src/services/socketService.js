@@ -1,5 +1,5 @@
 // src/services/socketService.js
-const { getOrCreateChannel, getMessages, addMessage, getAllChannelsWithLastMessage, markMessagesRead, getUnreadCountForAdmin } = require('./dbService');
+const { getOrCreateChannel, getMessages, addMessage, getAllChannelsWithLastMessage, markMessagesRead, markAllMessagesAsReadByUser, markAllMessagesAsReadByAdmin, getUnreadCountForAdmin } = require('./dbService');
 const BroadcastService = require('./broadcastService');
 
 function initializeSocket(io) {
@@ -81,6 +81,21 @@ function initializeSocket(io) {
             }
         });
 
+        socket.on('chat:user_opened_widget', async ({ channelId }) => {
+            try {
+                if (!socket.userEmail || channelId !== socket.userEmail) return;
+                await markAllMessagesAsReadByUser(channelId, socket.userEmail);
+                adminNamespace.emit('chat:read_status_updated', {
+                    channelId,
+                    reader: 'user',
+                    timestamp: new Date()
+                });
+                console.log(`✅ User ${socket.userEmail} opened widget, marked admin messages as read`);
+            } catch (error) {
+                console.error('Error marking messages read by user:', error);
+            }
+        });
+
         socket.on('disconnect', () => {
             console.log(`User disconnected: ${socket.id}`);
         });
@@ -135,6 +150,33 @@ function initializeSocket(io) {
                 });
             } catch (error) {
                 console.error('Error marking messages read (admin):', error);
+            }
+        });
+
+        socket.on('chat:admin_opened_conversation', async ({ channelId }) => {
+            try {
+                if (!channelId) return;
+                await markAllMessagesAsReadByAdmin(channelId, 'admin');
+                
+                // Cập nhật unread count sau khi đọc
+                const unreadCount = await getUnreadCountForAdmin(channelId);
+                
+                io.to(channelId).emit('chat:read_status_updated', {
+                    channelId,
+                    reader: 'admin',
+                    timestamp: new Date()
+                });
+                
+                adminNamespace.emit('chat:read_status_updated', {
+                    channelId,
+                    reader: 'admin',
+                    timestamp: new Date(),
+                    unreadCount
+                });
+                
+                console.log(`✅ Admin opened conversation ${channelId}, marked user messages as read`);
+            } catch (error) {
+                console.error('Error marking messages read by admin:', error);
             }
         });
 

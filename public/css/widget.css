@@ -335,9 +335,10 @@
 }
 
 .read-status {
-    color: #28a745;
+    color: #6c757d;
     margin-left: 6px;
-    font-weight: 500;
+    font-weight: 400;
+    opacity: 0.8;
     display: none;
 }
 
