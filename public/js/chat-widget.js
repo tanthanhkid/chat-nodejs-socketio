@@ -201,6 +201,13 @@
                     markAllUnreadMessagesAsReadOnReconnect();
                 }
             }, 100);
+            
+            // Mark all unread from database
+            setTimeout(() => {
+                if (!$('#chat-window').hasClass('chat-hidden')) {
+                    markAllUnreadMessagesFromDatabase();
+                }
+            }, 200);
         });
     }
 
@@ -302,6 +309,11 @@
                     markAllUnreadMessagesAsReadOnReconnect();
                 }, 1000);
             }
+            
+            // Mark all unread from database after join
+            setTimeout(() => {
+                markAllUnreadMessagesFromDatabase();
+            }, 1500);
         });
 
         socket.on('chat:history', (messages) => {
@@ -318,6 +330,11 @@
             setTimeout(() => {
                 markAllUnreadMessagesAsReadOnReconnect();
             }, 300);
+            
+            // Mark all unread from database
+            setTimeout(() => {
+                markAllUnreadMessagesFromDatabase();
+            }, 500);
         });
 
         socket.on('chat:message', (message) => {
@@ -360,6 +377,19 @@
             if (data.reader === 'admin') {
                 updateAllMessagesAsRead('user');
             }
+        });
+
+        socket.on('chat:all_unread_marked', (data) => {
+            console.log(`✅ Database confirmed: ${data.updatedCount} messages marked as read`);
+            
+            // Update UI
+            $('.messages-container .message-admin .read-status').each(function() {
+                $(this).text('Đã xem').show();
+            });
+            
+            // Reset unread count
+            unreadMessagesCount = 0;
+            $('#unread-count').hide().text('0');
         });
     }
 
@@ -612,6 +642,19 @@
         $('#unread-count').hide().text('0');
         
         console.log(`✅ Marked all admin messages as read on reconnect`);
+    }
+
+    function markAllUnreadMessagesFromDatabase() {
+        if (!socket || !userEmail) {
+            console.log('⚠️ Cannot mark messages: socket or userEmail not available');
+            return;
+        }
+        
+        console.log('🔄 Calling database to mark all unread messages...');
+        socket.emit('chat:mark_all_unread', { 
+            channelId: userEmail, 
+            reader: 'user' 
+        });
     }
 
     function markMessagesRead(messageIds) {

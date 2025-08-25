@@ -406,6 +406,39 @@ async function getUnreadCountForUser(channelId, userId) {
 }
 
 /**
+ * Đánh dấu tất cả tin nhắn chưa đọc trong channel thành đã đọc
+ * @param {string} channelId - ID của kênh
+ * @param {'user'|'admin'} reader - Bên đọc
+ * @returns {Object} Kết quả update với số lượng và message IDs
+ */
+async function markAllUnreadMessagesAsReadForChannel(channelId, reader) {
+  const client = await pool.connect();
+  try {
+    const field = reader === 'user' ? 'user_read_at' : 'admin_read_at';
+    const sender = reader === 'user' ? 'admin' : 'user';
+    
+    const result = await client.query(
+      `UPDATE messages
+       SET ${field} = NOW()
+       WHERE channel_id = $1 AND sender = $2 AND ${field} IS NULL
+       RETURNING message_id`,
+      [channelId, sender]
+    );
+    
+    console.log(`✅ Database: Marked ${result.rowCount} unread messages as read for ${reader} in channel ${channelId}`);
+    return {
+      updatedCount: result.rowCount,
+      messageIds: result.rows.map(row => row.message_id)
+    };
+  } catch (error) {
+    console.error('Error marking all unread messages:', error.message);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
  * Xóa tin nhắn cũ (cleanup function)
  * @param {number} daysOld - Số ngày cũ
  * @returns {number} Số tin nhắn đã xóa
@@ -438,6 +471,7 @@ module.exports = {
   markMessagesRead,
   markAllMessagesAsReadByUser,
   markAllMessagesAsReadByAdmin,
+  markAllUnreadMessagesAsReadForChannel,
   getUnreadCountForUser,
   getSystemStats,
   deleteOldMessages,

@@ -1,5 +1,5 @@
 // src/services/socketService.js
-const { getOrCreateChannel, getMessages, addMessage, getAllChannelsWithLastMessage, markMessagesRead, markAllMessagesAsReadByUser, markAllMessagesAsReadByAdmin, getUnreadCountForAdmin } = require('./dbService');
+const { getOrCreateChannel, getMessages, addMessage, getAllChannelsWithLastMessage, markMessagesRead, markAllMessagesAsReadByUser, markAllMessagesAsReadByAdmin, markAllUnreadMessagesAsReadForChannel, getUnreadCountForAdmin } = require('./dbService');
 const BroadcastService = require('./broadcastService');
 
 function initializeSocket(io) {
@@ -93,6 +93,35 @@ function initializeSocket(io) {
                 console.log(`✅ User ${socket.userEmail} opened widget, marked admin messages as read`);
             } catch (error) {
                 console.error('Error marking messages read by user:', error);
+            }
+        });
+
+        socket.on('chat:mark_all_unread', async ({ channelId, reader }) => {
+            try {
+                if (!socket.userEmail || channelId !== socket.userEmail) return;
+                
+                const result = await markAllUnreadMessagesAsReadForChannel(channelId, reader);
+                
+                // Broadcast cho admin
+                adminNamespace.emit('chat:all_unread_marked', {
+                    channelId,
+                    reader,
+                    updatedCount: result.updatedCount,
+                    messageIds: result.messageIds,
+                    timestamp: new Date()
+                });
+                
+                // Confirm cho user
+                socket.emit('chat:all_unread_marked', {
+                    channelId,
+                    reader,
+                    updatedCount: result.updatedCount,
+                    messageIds: result.messageIds
+                });
+                
+                console.log(`✅ All unread messages marked as read for ${reader} in channel ${channelId}`);
+            } catch (error) {
+                console.error('Error marking all unread messages:', error);
             }
         });
 
