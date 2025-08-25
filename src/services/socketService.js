@@ -5,6 +5,9 @@ const BroadcastService = require('./broadcastService');
 function initializeSocket(io) {
     const adminNamespace = io.of("/admin"); // Namespace riêng cho admin
 
+    // Khởi tạo broadcast service với io instance
+    const broadcastService = new BroadcastService(io);
+
     // Main namespace - cho users
     io.on('connection', (socket) => {
         console.log(`A user connected: ${socket.id}`);
@@ -234,29 +237,15 @@ function initializeSocket(io) {
             }
         });
 
+        // Sửa broadcast event để sử dụng service hiện tại
         socket.on('admin:sendBroadcast', async (broadcastData) => {
             try {
-                const { content, type, targetType, targetDepartmentId } = broadcastData;
-                
-                // Gọi broadcast service
-                const result = await BroadcastService.sendBroadcastMessage({
-                    content,
-                    type,
-                    targetType,
-                    targetDepartmentId
-                });
+                const result = await broadcastService.sendBroadcastMessage(broadcastData);
                 
                 // Thông báo cho admin
                 socket.emit('admin:broadcastSent', result);
                 
-                // Gửi tin nhắn tới các users qua Socket.IO
-                if (result.messages && result.messages.length > 0) {
-                    result.messages.forEach(message => {
-                        io.to(message.channelId).emit('chat:message', message);
-                    });
-                }
-                
-                console.log(`Broadcast sent to ${result.sentCount} users`);
+                console.log(`Broadcast sent: ${result.sentCount} total, ${result.successCount} success`);
             } catch (error) {
                 console.error('Error sending broadcast:', error);
                 socket.emit('error', { message: 'Failed to send broadcast' });

@@ -141,6 +141,14 @@ app.post('/upload', (req, res) => {
 // Broadcast routes
 const BroadcastService = require('./services/broadcastService');
 
+// Khởi tạo broadcast service (cần truyền io instance)
+let broadcastService;
+
+// Khởi tạo sau khi có io instance
+function initializeBroadcastServices(io) {
+    broadcastService = new BroadcastService(io);
+}
+
 app.get('/broadcast', async (req, res) => {
     try {
         res.render('broadcast', { 
@@ -178,6 +186,10 @@ app.get('/api/employees', async (req, res) => {
 
 app.post('/api/broadcast/send', async (req, res) => {
     try {
+        if (!broadcastService) {
+            return res.status(500).json({ error: 'Broadcast service not initialized' });
+        }
+
         const { content, type, targetType, targetDepartmentId } = req.body;
         
         // Validate input
@@ -189,8 +201,8 @@ app.post('/api/broadcast/send', async (req, res) => {
             return res.status(400).json({ error: 'Department ID required for department target' });
         }
         
-        // Send broadcast
-        const result = await BroadcastService.sendBroadcastMessage({
+        // Send broadcast sử dụng service hiện tại
+        const result = await broadcastService.sendBroadcastMessage({
             content,
             type,
             targetType,
@@ -204,15 +216,7 @@ app.post('/api/broadcast/send', async (req, res) => {
     }
 });
 
-app.get('/api/broadcast/history', async (req, res) => {
-    try {
-        const broadcasts = await BroadcastService.getBroadcastHistory();
-        res.json(broadcasts);
-    } catch (error) {
-        console.error('Error getting broadcast history:', error);
-        res.status(500).json({ error: 'Failed to get broadcast history' });
-    }
-});
+// BỎ ROUTE /api/broadcast/history - Không cần nữa
 
 // Employee API endpoints
 app.get('/api/employees', async (req, res) => {
@@ -346,6 +350,9 @@ async function startServer() {
         
         // Khởi tạo Socket.IO
         initializeSocket(io);
+        
+        // Khởi tạo Broadcast Services
+        initializeBroadcastServices(io);
         
         // Chạy server
         const PORT = process.env.PORT || 3000;

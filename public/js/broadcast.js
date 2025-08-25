@@ -8,7 +8,7 @@ $(document).ready(function() {
 
     function initializeBroadcast() {
         loadDepartments();
-        loadBroadcastHistory();
+        // BỎ loadBroadcastHistory(); - Không cần nữa
         setupEventListeners();
     }
 
@@ -218,7 +218,7 @@ $(document).ready(function() {
             
             // Reset form
             resetForm();
-            loadBroadcastHistory();
+            // BỎ loadBroadcastHistory(); - Không cần nữa
         } catch (error) {
             console.error('Error sending broadcast:', error);
             showToast('Lỗi', 'Không thể gửi tin nhắn', 'error');
@@ -265,39 +265,7 @@ $(document).ready(function() {
         removeImage();
     }
 
-    async function loadBroadcastHistory() {
-        try {
-            const response = await fetch('/api/broadcast/history');
-            const broadcasts = await response.json();
-            
-            const container = $('#broadcast-list');
-            if (broadcasts.length === 0) {
-                container.html('<p class="text-muted">Chưa có tin nhắn broadcast nào</p>');
-                return;
-            }
-
-            let html = '';
-            broadcasts.forEach(broadcast => {
-                const contentPreview = broadcast.type === 'image' ? '📷 Hình ảnh' : broadcast.content.substring(0, 50);
-                
-                html += `
-                    <div class="broadcast-item">
-                        <div class="broadcast-header">
-                            <span class="broadcast-time">${formatDate(broadcast.timestamp)}</span>
-                        </div>
-                        <div class="broadcast-content">${contentPreview}</div>
-                        <div class="broadcast-stats">
-                            <span class="sent-count">Đã gửi: ${broadcast.recipient_count} nhân viên</span>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.html(html);
-        } catch (error) {
-            console.error('Error loading broadcast history:', error);
-        }
-    }
+    // BỎ loadBroadcastHistory() function - Không cần nữa
 
     function formatDate(dateString) {
         return window.TimezoneUtils.formatFullDateVietnam(dateString);
