@@ -6,6 +6,11 @@
     let socket = null;
     let isConnected = false;
     let messageQueue = [];
+    
+    // Widget state tracking
+    let isWidgetMinimized = false;
+    let isWidgetClosed = false;
+    let unreadMessagesCount = 0;
 
     // Main widget object
     window.MyChatWidget = {
@@ -199,10 +204,14 @@
         // Clear unread count
         $('#unread-count').hide().text('0');
         
-        // Emit event khi user mở widget
-        if (socket && userEmail) {
+        // Chỉ emit khi widget đang đóng hoặc có tin nhắn chưa đọc
+        if ((isWidgetClosed || unreadMessagesCount > 0) && socket && userEmail) {
             socket.emit('chat:user_opened_widget', { channelId: userEmail });
+            unreadMessagesCount = 0;
         }
+        
+        isWidgetMinimized = false;
+        isWidgetClosed = false;
         
         // If not connected and no email, show login
         if (!isConnected && !userEmail) {
@@ -216,11 +225,14 @@
         const $ = window.jQuery;
         $('#chat-window').addClass('chat-hidden');
         $('#chat-bubble').removeClass('chat-active');
+        isWidgetMinimized = true;
+        // Không emit gì cả - user chưa thực sự xem tin nhắn
     }
 
     function closeChatWindow() {
         minimizeChatWindow();
-        // Optionally disconnect socket
+        isWidgetClosed = true;
+        // Disconnect socket
         if (socket) {
             socket.disconnect();
             socket = null;
@@ -279,12 +291,13 @@
 
         socket.on('chat:message', (message) => {
             appendMessage(message);
-            if (socket) {
+            
+            // Chỉ mark read nếu widget đang mở và không bị minimize
+            if (!$('#chat-window').hasClass('chat-hidden') && !isWidgetMinimized) {
                 socket.emit('chat:read', { messageIds: [message.messageId] });
-            }
-
-            // Show notification if window is minimized
-            if ($('#chat-window').hasClass('chat-hidden')) {
+            } else {
+                // Tăng unread count nếu widget đang đóng hoặc minimize
+                unreadMessagesCount++;
                 incrementUnreadCount();
                 showNotification(message);
             }
@@ -524,6 +537,9 @@
         const unreadEl = $('#unread-count');
         const current = parseInt(unreadEl.text()) || 0;
         unreadEl.text(current + 1).show();
+        
+        // Cập nhật unreadMessagesCount để đồng bộ với UI
+        unreadMessagesCount = current + 1;
     }
 
     function updateConnectionStatus(status) {
